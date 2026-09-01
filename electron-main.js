@@ -43,6 +43,13 @@ const KIRO_TIMEOUT_MS = Number(process.env.KIRO_TIMEOUT_MS || 120000);
 //   KIRO_TRUST_TOOLS="fs_read,fs_write,execute_bash" -> custom allow-list
 const KIRO_TRUST_TOOLS = process.env.KIRO_TRUST_TOOLS ?? "fs_read,fs_write";
 
+// Bridge task names are simple slugs (e.g. "finance-summary"). Validate before
+// using a task in any filesystem path so a crafted name can't traverse out of
+// the bridge folder (defense-in-depth; task normally comes from our own UI).
+function isValidTask(task) {
+  return typeof task === "string" && /^[a-z0-9][a-z0-9-]{0,63}$/.test(task);
+}
+
 // PATH a GUI-launched app should search (GUI apps inherit a minimal PATH).
 const AGENT_PATH_DIRS = [
   path.join(process.env.HOME || "", ".local/bin"),
@@ -229,6 +236,9 @@ ipcMain.handle("bridge-status", async () => {
 // renderer calls: window.coco.quickTask("daily-summary", {params})
 // → writes request → polls response file → resolves { status, summary, ... }
 ipcMain.handle("quick-task", async (_evt, task, params = {}) => {
+  if (!isValidTask(task)) {
+    return { error: "Invalid task name." };
+  }
   try {
     fs.mkdirSync(REQUESTS_DIR, { recursive: true });
     fs.mkdirSync(path.dirname(RESPONSE_FILE), { recursive: true });
@@ -475,6 +485,11 @@ ipcMain.handle("open-design", async (_evt, brief) => {
 // =============================================================================
 ipcMain.handle("read-output", async (_evt, task) => {
   const wanted = (task || "").toLowerCase();
+  // Reject anything that isn't a plain task slug so it can't be used to build a
+  // path outside the outputs folder.
+  if (wanted && !isValidTask(wanted)) {
+    return { error: "Invalid task name." };
+  }
   const outputsDir = path.join(BRIDGE_ROOT, "outputs");
 
   // Per-task max cache ages from the Quick Voice Bridge spec (in hours).
