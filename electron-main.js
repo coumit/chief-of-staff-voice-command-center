@@ -181,6 +181,51 @@ app.on("window-all-closed", () => {
 // =============================================================================
 // IPC: QUICK FILE-BRIDGE
 // =============================================================================
+// IPC: BRIDGE STATUS — has Amazon Quick actually been set up?
+// ---------------------------------------------------------------------------
+// The APP only writes requests and reads results; QUICK creates the responses/
+// and outputs/ files. So the reliable signal that Quick is set up + running is
+// whether it has ever written a REAL (non-placeholder) response. The default
+// bridge-template ships placeholder outputs with a 1970 completed_at, which we
+// treat as "not set up yet". Returns { ready, bridgeRoot, everResponded }.
+// =============================================================================
+ipcMain.handle("bridge-status", async () => {
+  const outputsDir = path.join(BRIDGE_ROOT, "outputs");
+  const PLACEHOLDER_BEFORE = new Date("2000-01-01T00:00:00Z").getTime();
+
+  const isRealResponse = (p) => {
+    try {
+      const data = JSON.parse(fs.readFileSync(p, "utf8"));
+      if (!data) return false;
+      // A real Quick response has a completed_at after the placeholder epoch
+      // and an actual summary (the template placeholders are pre-2000 / empty).
+      const t = data.completed_at ? new Date(data.completed_at).getTime() : 0;
+      const hasSummary = !!(data.summary && String(data.summary).trim());
+      return t > PLACEHOLDER_BEFORE && hasSummary;
+    } catch { return false; }
+  };
+
+  let everResponded = false;
+  try {
+    if (fs.existsSync(RESPONSE_FILE) && isRealResponse(RESPONSE_FILE)) everResponded = true;
+    if (!everResponded && fs.existsSync(outputsDir)) {
+      for (const f of fs.readdirSync(outputsDir)) {
+        if (f.endsWith(".json") && isRealResponse(path.join(outputsDir, f))) { everResponded = true; break; }
+      }
+    }
+  } catch { /* ignore */ }
+
+  return {
+    ready: everResponded,
+    everResponded,
+    bridgeRoot: BRIDGE_ROOT,
+    requestsDir: REQUESTS_DIR,
+    responseFile: RESPONSE_FILE,
+    outputsDir,
+  };
+});
+
+// =============================================================================
 // renderer calls: window.coco.quickTask("daily-summary", {params})
 // → writes request → polls response file → resolves { status, summary, ... }
 ipcMain.handle("quick-task", async (_evt, task, params = {}) => {

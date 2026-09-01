@@ -13,6 +13,10 @@ contextBridge.exposeInMainWorld("coco", {
   // Read the latest report output (growth/finance) from the bridge folder.
   readOutput: (task) => ipcRenderer.invoke("read-output", task),
 
+  // Check whether the Amazon Quick bridge is set up (has Quick ever responded?).
+  // Returns { ready, everResponded, bridgeRoot, requestsDir, ... }.
+  bridgeStatus: () => ipcRenderer.invoke("bridge-status"),
+
   // Launch the Open Design daemon + web UI, create a project, and optionally
   // kick off a design run from a spoken brief ("call my design shop, start a
   // new design of a cruise landing page").

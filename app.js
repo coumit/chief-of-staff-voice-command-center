@@ -592,6 +592,24 @@ function matchQuickTask(text) {
   return best;
 }
 
+// Guide the user through setting up Amazon Quick + the file-bridge when it
+// hasn't been set up yet (Quick has never written a response). Spoken message
+// stays short; the log carries the actionable steps + paths.
+function guideBridgeSetup(label, status) {
+  const root = (status && status.bridgeRoot) || "~/Documents/CoS-Bridge";
+  log(`Amazon Quick isn't set up yet, so I can't get your ${label}.`, "a");
+  log("To enable Quick briefings (CFO, daily summary, calendar, etc.):", "muted");
+  log("1. Install Amazon Quick (Amazon Quick Suite): https://quick.amazon.com", "muted");
+  log(`2. Create a scheduled Quick agent named \u201cvoice-bridge-watcher\u201d that watches ${root}/requests/, and have Quick CREATE the responses/ and outputs/ folders and write results there.`, "muted");
+  log("3. For the CFO, point Quick at your financial-report emails (the finance-summary task).", "muted");
+  log("Full copy-paste instructions to hand Quick are in docs/quick-setup.md (\u201cGive these instructions to Quick\u201d).", "muted");
+  return speak(
+    `Amazon Quick isn't set up yet, so I can't pull your ${label}. ` +
+    `You'll need to install Amazon Quick and create the bridge — for the CFO, point it at your financial report emails. ` +
+    `I've put the step-by-step setup, including the exact instructions to give Quick, in the log and in the quick-setup guide.`
+  );
+}
+
 // Ask Amazon Quick via the local FILE-BRIDGE (Electron main writes a request
 // file, Quick answers within ~5 min, we speak the summary). Electron-only.
 async function askQuickBridge(task, label) {
@@ -619,6 +637,18 @@ async function askQuickBridge(task, label) {
     }
   } catch (e) {
     log(`[quick] could not read cache: ${e && e.message ? e.message : e}`, "muted");
+  }
+
+  // SETUP CHECK: if Amazon Quick has never produced a response, the bridge
+  // isn't set up. Guide the user instead of writing a request that will just
+  // time out after several minutes.
+  try {
+    const status = await window.coco.bridgeStatus();
+    if (status && !status.ready) {
+      return guideBridgeSetup(label, status);
+    }
+  } catch (e) {
+    log(`[quick] could not check bridge status: ${e && e.message ? e.message : e}`, "muted");
   }
 
   // FRESH PATH: nothing cached (or stale) — request it and wait for Quick.

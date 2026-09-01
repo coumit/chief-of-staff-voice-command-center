@@ -20,28 +20,82 @@ This guide sets up the four bridge paths shipped in this build:
 
 ---
 
-## 0. Prerequisite: the file-bridge
+## 0. Prerequisite: install Quick + create the bridge
 
-Do this once before setting up any path.
+If you call a Quick capability (e.g. the CFO) before this is done, the app will
+tell you Quick isn't set up and point you here — it won't just hang.
+
+### Step 1 — Install Amazon Quick
+
+Install **Amazon Quick** (Amazon Quick Suite): <https://quick.amazon.com>.
+Quick is what connects to your email/calendar and produces the briefings.
+
+### Step 2 — Pick the bridge folder
+
+The app reads/writes the bridge at `COS_BRIDGE_ROOT` (default
+`~/Documents/CoS-Bridge`). You only need to make sure the `requests/` folder
+exists — **Quick creates `responses/` and `outputs/` itself** the first time it
+runs a task (the app never creates those; it only reads them):
 
 ```bash
-# Copy the default bridge into place (default location shown)
-cp -R docs/bridge-template ~/Documents/CoS-Bridge
+mkdir -p ~/Documents/CoS-Bridge/requests
 export COS_BRIDGE_ROOT=~/Documents/CoS-Bridge
+# Optional: copy the reference task registry so you have the task list handy
+cp docs/bridge-template/task_registry.json ~/Documents/CoS-Bridge/ 2>/dev/null || true
 ```
 
-In **Amazon Quick**, create a scheduled agent named **`voice-bridge-watcher`**
-that polls `~/Documents/CoS-Bridge/requests/` every 5 minutes. Its job for every
-request file is:
+### Step 3 — Give Amazon Quick the watcher instructions
 
-1. Read the `task` field.
-2. Run the matching task section below.
-3. Write the result to **both** `responses/response.json` and
-   `outputs/<task>.json` using the response schema in `voice-bridge-spec.md`.
-4. Delete the request file.
+In **Amazon Quick**, create a **scheduled agent named `voice-bridge-watcher`**
+that runs every 5 minutes, and paste it the instructions below. This is the
+piece that makes the bridge work — **Quick owns creating the folders and files**.
 
-The task list and trigger phrases are defined in
-`bridge-template/task_registry.json` — keep the agent's tasks in sync with it.
+> **Copy-paste this into the Quick `voice-bridge-watcher` agent prompt:**
+>
+> ````text
+> You are the voice-bridge-watcher for the Chief of Staff (Jarvis) app.
+> Every 5 minutes, do the following against the bridge folder
+> BRIDGE_ROOT = ~/Documents/CoS-Bridge  (expand ~ to my home folder):
+>
+> 1. Ensure these folders exist; CREATE them if missing:
+>       BRIDGE_ROOT/requests/
+>       BRIDGE_ROOT/responses/
+>       BRIDGE_ROOT/outputs/
+> 2. Read every *.json file in BRIDGE_ROOT/requests/. Each has the shape
+>       { "task": "<task-name>", "requested_at": "<ISO8601>", "params": {} }
+> 3. For each request, run the matching task (see TASKS below) and WRITE the
+>    result to BOTH of these files (create/overwrite them):
+>       BRIDGE_ROOT/responses/response.json         (the shared latest result)
+>       BRIDGE_ROOT/outputs/<task>.json             (per-task cache)
+>    using EXACTLY this JSON shape:
+>       {
+>         "task": "<task-name>",
+>         "status": "completed" | "error",
+>         "completed_at": "<ISO8601 now>",
+>         "summary": "<plain, TTS-ready text — no markdown, no bullet chars>",
+>         "data": { ... task-specific metrics ... },
+>         "original_request": "<the request filename>",
+>         "error": "<message, only when status=error>"
+>       }
+> 4. DELETE each request file after you process it (even on error).
+>
+> TASKS:
+>   • finance-summary  (the CFO): read my most recent financial-report emails
+>     (e.g. an "AWS Cost Report" or my accounting summary). Summarize yesterday's
+>     spend, month-to-date, week-over-week and month-over-month trends, top cost
+>     drivers, and any LLM/model spend, in a CFO-style spoken briefing.
+>   • daily-summary: last 24h of work email + today's calendar, as a morning
+>     briefing.
+>   • calendar-check, email-check, booking-check, mom-update, system-status:
+>     see the descriptions in task_registry.json.
+>
+> Always write valid JSON. The "summary" field is read aloud, so keep it
+> conversational and free of markdown.
+> ````
+
+Confirm setup by asking Jarvis for the CFO ("call the CFO"). The first run
+takes a few minutes; after that it's instant from the cache. Keep the agent's
+task list in sync with `bridge-template/task_registry.json`.
 
 ---
 
