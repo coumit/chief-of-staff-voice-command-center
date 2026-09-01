@@ -263,7 +263,8 @@ ipcMain.handle("quick-task", async (_evt, task, params = {}) => {
     return { error: `Could not write request: ${e.message}` };
   }
 
-  // 2) Poll for a newer response (Quick picks up within ~5 min).
+  // 2) Poll for a newer response (fallback path; Quick normally refreshes the
+  //    outputs on its once-a-day run, which the instant path reads from cache).
   const start = Date.now();
   while (Date.now() - start < BRIDGE_TIMEOUT_MS) {
     try {

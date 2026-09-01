@@ -33,10 +33,11 @@ CoS-Bridge/
 1. You speak a command; the app matches it to a `task` via `task_registry.json`.
 2. The app first reads `outputs/<task>.json` — if fresh (within
    `max_cache_age_minutes`), it speaks it instantly.
-3. Otherwise it writes `requests/request_*.json` and waits.
-4. Amazon Quick's `voice-bridge-watcher` agent (polls every ~5 min) runs the
+3. Otherwise it falls back to writing `requests/request_*.json`.
+4. Amazon Quick's `voice-bridge-watcher` agent (runs **once a day**) runs each
    task, writes `responses/response.json` **and** `outputs/<task>.json`, then
-   deletes the request file.
+   deletes any request file. The command center reads those cached outputs
+   instantly for the rest of the day.
 
 ## Request / response schema
 

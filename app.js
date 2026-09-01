@@ -618,8 +618,9 @@ function guideBridgeSetup(label, status, task) {
   );
 }
 
-// Ask Amazon Quick via the local FILE-BRIDGE (Electron main writes a request
-// file, Quick answers within ~5 min, we speak the summary). Electron-only.
+// Ask Amazon Quick via the local FILE-BRIDGE. Quick's watcher runs once a day
+// and writes the per-task outputs, so normally we read the cached result
+// instantly; writing a request is a fallback. Electron-only.
 async function askQuickBridge(task, label) {
   if (!IN_ELECTRON) {
     return speak("The Quick bridge only works in the Coco desktop app.");
@@ -627,9 +628,9 @@ async function askQuickBridge(task, label) {
   setStatus("WORKING");
   beginHandoff("quick", (label || "QUICK").toUpperCase());
 
-  // INSTANT PATH: read the cached per-task output first (Quick writes
-  // outputs/<task>.json). If it's present and fresh, speak it immediately —
-  // no waiting on Quick's 5-minute poll cycle.
+  // INSTANT PATH: read the cached per-task output first (Quick's daily run
+  // writes outputs/<task>.json). If it's present and fresh, speak it
+  // immediately — no waiting on Quick.
   try {
     const cached = await window.coco.readOutput(task);
     if (cached && !cached.error && cached.summary) {

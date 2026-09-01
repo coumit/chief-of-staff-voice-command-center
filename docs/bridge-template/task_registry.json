@@ -1,9 +1,10 @@
 {
-  "_comment": "Default Quick Voice Bridge task registry for Chief of Staff (Jarvis). Point Amazon Quick's scheduled 'voice-bridge-watcher' agent at your COS_BRIDGE_ROOT (default ~/Documents/CoS-Bridge); Quick reads requests/ and CREATES responses/ + outputs/. Chief Growth Officer (growth-summary), Marketing & Sales, Bookings, and Family/Kids updates are intentionally excluded from this build.",
+  "_comment": "Default Quick Voice Bridge task registry for Chief of Staff (Jarvis). Point Amazon Quick's scheduled 'voice-bridge-watcher' agent at your COS_BRIDGE_ROOT (default ~/Documents/CoS-Bridge); the agent runs ONCE A DAY, and CREATES + refreshes responses/ + outputs/. The command center then reads those cached outputs instantly. Chief Growth Officer (growth-summary), Marketing & Sales, Bookings, and Family/Kids updates are intentionally excluded from this build.",
   "request_dir": "requests/",
   "response_file": "responses/response.json",
   "outputs_dir": "outputs/",
-  "poll_interval_minutes": 5,
+  "schedule": "daily",
+  "poll_interval_minutes": 1440,
   "tasks": {
     "daily-summary": {
       "trigger_phrases": ["daily summary", "what happened today", "morning briefing", "day summary"],

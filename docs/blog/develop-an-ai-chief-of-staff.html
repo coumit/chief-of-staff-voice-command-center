@@ -112,11 +112,12 @@
     <p class="byline">by Courtney Maatta | in <span class="cat">AWS Public Sector Blog</span>, Artificial Intelligence, Productivity</p>
     <p class="posted">Posted: [Date] &nbsp;|&nbsp; Permalink &nbsp;|&nbsp; Comments &nbsp;|&nbsp; Share</p>
 
-    <p>Public sector teams spend a large share of their day on administrative
-      work: pulling cost reports, checking on security posture, scanning email
-      and chat for what needs attention, and keeping a calendar straight.
-      Individually these tasks are small. Together they are a tax on the time
-      that mission and constituents actually need.</p>
+    <p>Public sector teams devote a significant portion of each day to
+      administrative work: compiling cost reports, monitoring security posture,
+      triaging email and chat, and maintaining an accurate calendar. Individually,
+      these tasks are minor. Collectively, they consume time and attention that
+      would be better directed toward mission outcomes and the constituents these
+      teams serve.</p>
 
     <p>What if you had a chief of staff for that work — one that runs entirely on
       your own machine, listens when you talk to it, and answers back through a
@@ -190,25 +191,10 @@
       connecting to email, chat, and reporting sources — and writes the answers
       back for the command center to read aloud.</p>
     <p>The flow looks like this:</p>
-<pre>
-  You (voice)                             Amazon Quick (desktop assistant)
-  ---------------                         --------------------------------
-  "Call the CFO"                          "voice-bridge-watcher" agent
-        |                                  polls the bridge every ~5 min
-        v                                            |
-  Command center writes                              |  reads the request,
-  a request file  ------>  ~/Documents/CoS-Bridge/requests/   runs the task
-                                                     |  (email, cost report,
-                                                     |   security report, ...)
-                                                     v
-                            ~/Documents/CoS-Bridge/responses/response.json
-                            ~/Documents/CoS-Bridge/outputs/&lt;task&gt;.json
-                                                     |
-        +---------------------------------------------+
-        v
-  Command center reads the answer --> speaks the summary + updates the dashboard
-</pre>
-    <p class="diagram-cap">Figure 2. The local command center and Amazon Quick exchange JSON files through a shared bridge folder. (Replace with an architecture diagram before publishing.)</p>
+    <figure style="margin:20px 0;">
+      <img src="assets/bridge-flow.png" alt="Flowchart: you say 'Call the CFO'; the command center writes a request file to the CoS-Bridge requests folder; the voice-bridge-watcher agent in Amazon Quick runs once a day and runs the task; it writes response.json and outputs files back; the command center reads the answer, speaks the summary, and updates the dashboard." style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;" />
+      <figcaption class="diagram-cap">Figure 2. The local command center and Amazon Quick exchange JSON files through a shared bridge folder.</figcaption>
+    </figure>
     <p>The key idea: <strong>the desktop assistant creates and fills the
       <code>responses/</code> and <code>outputs/</code> folders; the command
       center only writes requests and reads results.</strong> That clean

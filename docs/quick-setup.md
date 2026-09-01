@@ -47,14 +47,16 @@ cp docs/bridge-template/task_registry.json ~/Documents/CoS-Bridge/ 2>/dev/null |
 ### Step 3 — Give Amazon Quick the watcher instructions
 
 In **Amazon Quick**, create a **scheduled agent named `voice-bridge-watcher`**
-that runs every 5 minutes, and paste it the instructions below. This is the
+that runs **once a day** (for example, alongside your morning reports), and paste
+it the instructions below. Quick only needs to run once per day to refresh the
+bridge — the command center then reads the cached results instantly. This is the
 piece that makes the bridge work — **Quick owns creating the folders and files**.
 
 > **Copy-paste this into the Quick `voice-bridge-watcher` agent prompt:**
 >
 > ````text
 > You are the voice-bridge-watcher for the Chief of Staff (Jarvis) app.
-> Every 5 minutes, do the following against the bridge folder
+> Once a day (on your daily schedule), do the following against the bridge folder
 > BRIDGE_ROOT = ~/Documents/CoS-Bridge  (expand ~ to my home folder):
 >
 > 1. Ensure these folders exist; CREATE them if missing:
@@ -122,10 +124,11 @@ customer receives by email).
 3. Point the report source at the **customer's own financial report emails** —
    swap the example sender/subject for whatever the customer actually receives.
 
-**Test it:** say "call the CFO" (or "finance summary"). The app requests
-`finance-summary`; within ~5 minutes Quick fills in
-`outputs/finance-summary.json` and Jarvis speaks it. After the first run of the
-day it reads instantly from cache.
+**Test it:** say "call the CFO" (or "finance summary"). Once the daily
+`voice-bridge-watcher` run has written `outputs/finance-summary.json`, Jarvis
+reads it instantly from cache. (If you want to see it immediately the first time,
+run the `voice-bridge-watcher` agent once by hand rather than waiting for the
+next scheduled daily run.)
 
 ---
 
