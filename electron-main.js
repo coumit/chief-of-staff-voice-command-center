@@ -33,6 +33,16 @@ const KIRO_CLI = process.env.KIRO_CLI || path.join(os.homedir(), ".local", "bin"
 const KIRO_CWD = process.env.KIRO_CWD || path.join(os.homedir(), "Documents", "CoS-Projects");
 const KIRO_TIMEOUT_MS = Number(process.env.KIRO_TIMEOUT_MS || 120000);
 
+// Tool permissions for the AI Developer. By default we trust ONLY file
+// read/write, so the agent can build files in its scoped workspace but cannot
+// run shell commands, call AWS, or use other tools without explicit opt-in.
+// Untrusted tools are blocked in --no-interactive mode (they can't prompt).
+//   KIRO_TRUST_TOOLS unset  -> "fs_read,fs_write" (safe default)
+//   KIRO_TRUST_TOOLS=""      -> trust nothing
+//   KIRO_TRUST_TOOLS="all"   -> trust all tools (NOT recommended)
+//   KIRO_TRUST_TOOLS="fs_read,fs_write,execute_bash" -> custom allow-list
+const KIRO_TRUST_TOOLS = process.env.KIRO_TRUST_TOOLS ?? "fs_read,fs_write";
+
 // PATH a GUI-launched app should search (GUI apps inherit a minimal PATH).
 const AGENT_PATH_DIRS = [
   path.join(process.env.HOME || "", ".local/bin"),
@@ -73,9 +83,17 @@ function resolveAgentCli() {
 }
 
 // Build the argv for a one-shot, non-interactive Kiro CLI prompt:
-//   kiro-cli chat "<prompt>" --no-interactive [--agent NAME]
+//   kiro-cli chat "<prompt>" --no-interactive --trust-tools=fs_read,fs_write [--agent NAME]
+// Tool access is constrained by KIRO_TRUST_TOOLS (see above).
 function buildAgentArgs(message, agent) {
   const args = ["chat", message, "--no-interactive"];
+  const trust = (KIRO_TRUST_TOOLS || "").trim().toLowerCase();
+  if (trust === "all") {
+    args.push("--trust-all-tools");
+  } else {
+    // Trust only the listed tools (empty string => trust nothing).
+    args.push(`--trust-tools=${KIRO_TRUST_TOOLS}`);
+  }
   if (agent) args.push("--agent", agent);
   return args;
 }
