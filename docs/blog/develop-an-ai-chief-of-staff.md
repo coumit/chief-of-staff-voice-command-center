@@ -67,22 +67,24 @@ call the agent.
 
 ## How it works: the file "bridge"
 
-You build the bridge by prompting Amazon Quick after setting up Quick agents. The
-command center itself is intentionally simple and offline. It never calls a
-third‑party API directly. Instead, it exchanges small JSON files with a desktop
-assistant through a shared folder called the **bridge**. Your desktop assistant
-does the heavy lifting — connecting to email, chat, and reporting sources — and
-writes the answers back for the command center to read aloud.
+You build the bridge by prompting Amazon Quick once, when you set up your Quick
+agents. From then on, Amazon Quick does the heavy lifting on a schedule: each
+morning it connects to your email, chat, and reporting sources and **writes the
+day's briefings as small JSON files** into a shared folder called the **bridge**.
+The command center itself is intentionally simple and offline — it never calls a
+third‑party API. When you ask for something, it simply reads today's file from
+the bridge and speaks it aloud.
 
 The flow looks like this:
 
-![Flowchart of the voice bridge: you say "Call the CFO"; the command center writes a request file to the CoS-Bridge requests folder; the voice-bridge-watcher agent in Amazon Quick runs once a day and runs the task; it writes response.json and outputs files back; the command center reads the answer, speaks the summary, and updates the dashboard.](assets/bridge-flow.png)
+![Flowchart of the voice bridge: each morning the voice-bridge-watcher agent in Amazon Quick gathers your email, cost, and security reports and writes them to the CoS-Bridge outputs folder; when you say "Call the CFO," the local command center simply reads today's file, speaks the summary, and updates the dashboard.](assets/bridge-flow.png)
 
-*Figure 2. The local command center and Amazon Quick exchange JSON files through a shared bridge folder.*
+*Figure 2. Amazon Quick prepares the briefings each morning; the command center reads them on demand.*
 
-The key idea: **the desktop assistant creates and fills the `responses/` and
-`outputs/` folders; the command center only writes requests and reads results.**
-That clean separation is what keeps the local app simple and private.
+The key idea: **Amazon Quick writes the briefings ahead of time; the command
+center only reads what is already there.** There is no request/response
+round-trip and nothing to wait for — that clean separation is what keeps the
+local app simple, fast, and private.
 
 ## Prerequisite 1: A desktop assistant to feed the bridge
 

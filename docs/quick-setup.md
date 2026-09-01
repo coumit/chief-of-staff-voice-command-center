@@ -56,19 +56,18 @@ piece that makes the bridge work — **Quick owns creating the folders and files
 >
 > ````text
 > You are the voice-bridge-watcher for the Chief of Staff (Jarvis) app.
-> Once a day (on your daily schedule), do the following against the bridge folder
+> Run ONCE EACH MORNING and prepare all of my briefings ahead of time, so the
+> command center only has to read them. Work against the bridge folder
 > BRIDGE_ROOT = ~/Documents/CoS-Bridge  (expand ~ to my home folder):
 >
 > 1. Ensure these folders exist; CREATE them if missing:
->       BRIDGE_ROOT/requests/
->       BRIDGE_ROOT/responses/
 >       BRIDGE_ROOT/outputs/
-> 2. Read every *.json file in BRIDGE_ROOT/requests/. Each has the shape
->       { "task": "<task-name>", "requested_at": "<ISO8601>", "params": {} }
-> 3. For each request, run the matching task (see TASKS below) and WRITE the
->    result to BOTH of these files (create/overwrite them):
->       BRIDGE_ROOT/responses/response.json         (the shared latest result)
->       BRIDGE_ROOT/outputs/<task>.json             (per-task cache)
+>       BRIDGE_ROOT/responses/
+> 2. For EVERY task listed under TASKS below, gather the data and WRITE its
+>    result to:
+>       BRIDGE_ROOT/outputs/<task>.json             (per-task file the app reads)
+>    and also mirror the most recently generated one to:
+>       BRIDGE_ROOT/responses/response.json         (shared latest result)
 >    using EXACTLY this JSON shape:
 >       {
 >         "task": "<task-name>",
@@ -76,12 +75,11 @@ piece that makes the bridge work — **Quick owns creating the folders and files
 >         "completed_at": "<ISO8601 now>",
 >         "summary": "<plain, TTS-ready text — no markdown, no bullet chars>",
 >         "data": { ... task-specific metrics ... },
->         "original_request": "<the request filename>",
 >         "error": "<message, only when status=error>"
 >       }
-> 4. DELETE each request file after you process it (even on error).
+>    Overwrite yesterday's files each morning so the app always reads today's.
 >
-> TASKS:
+> TASKS (write one outputs/<task>.json for each):
 >   • finance-summary  (the CFO): read my most recent financial-report emails
 >     (e.g. an "AWS Cost Report" or my accounting summary). Summarize yesterday's
 >     spend, month-to-date, week-over-week and month-over-month trends, top cost
