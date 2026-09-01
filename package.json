@@ -33,6 +33,7 @@
       "category": "public.app-category.productivity",
       "icon": "build/icon.icns",
       "identity": null,
+      "x64ArchFiles": "Contents/Resources/native/coco-speech",
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "hardenedRuntime": true,
@@ -42,8 +43,8 @@
         "NSSpeechRecognitionUsageDescription": "CoS uses speech recognition to understand your voice commands."
       },
       "target": [
-        { "target": "dmg", "arch": ["arm64"] },
-        { "target": "dir", "arch": ["arm64"] }
+        { "target": "dmg", "arch": ["universal"] },
+        { "target": "dir", "arch": ["universal"] }
       ]
     },
     "dmg": {

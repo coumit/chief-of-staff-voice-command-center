@@ -1,0 +1,87 @@
+name: Build desktop installers
+
+# Builds Chief of Staff (Jarvis) installers on each native OS runner:
+#   macOS   -> .dmg (universal: Apple Silicon + Intel)
+#   Windows -> NSIS installer .exe + portable .exe
+#   Linux   -> .AppImage + .deb
+#
+# Trigger by pushing a version tag (v1.2.3) to cut a GitHub Release with the
+# installers attached, or run manually (workflow_dispatch) to just get build
+# artifacts.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to create/attach the GitHub Release on tag
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install app dependencies
+        run: npm ci || npm install
+
+      # macOS: compile the native Swift speech helper (bundled via extraResources)
+      - name: Build native speech helper (macOS)
+        if: runner.os == 'macOS'
+        run: swiftc -O -o native/coco-speech native/coco-speech.swift
+
+      # Build the platform installer(s). electron-builder auto-selects the
+      # target for the host OS from package.json (mac/win/linux blocks).
+      - name: Build installers
+        run: npm run dist
+        env:
+          # Unsigned builds. To sign macOS, set CSC_LINK / CSC_KEY_PASSWORD and
+          # notarization creds (APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID)
+          # as repo secrets and reference them here. Windows signing uses
+          # WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          path: |
+            dist/*.dmg
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.deb
+          if-no-files-found: warn
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create / update the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
