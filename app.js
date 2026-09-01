@@ -592,20 +592,34 @@ function matchQuickTask(text) {
   return best;
 }
 
+// Per-task hint describing what the user must connect Amazon Quick to. Used to
+// tailor the setup guidance so each capability points at the right data source.
+const QUICK_SOURCE_HINT = {
+  "finance-summary": "point Quick at your financial-report emails",
+  "daily-summary":   "connect Quick to your daily work email (and calendar)",
+  "calendar-check":  "connect Quick to your calendar",
+  "email-check":     "connect Quick to your email inbox",
+  "booking-check":   "connect Quick to the mailbox that receives booking emails",
+  "mom-update":      "connect Quick to your family calendar and school emails",
+  "system-status":   "let Quick read your agents' activity feed",
+};
+
 // Guide the user through setting up Amazon Quick + the file-bridge when it
 // hasn't been set up yet (Quick has never written a response). Spoken message
-// stays short; the log carries the actionable steps + paths.
-function guideBridgeSetup(label, status) {
+// stays short; the log carries the actionable steps + paths. The hint is
+// tailored to the specific task (CFO vs daily summary vs calendar, etc.).
+function guideBridgeSetup(label, status, task) {
   const root = (status && status.bridgeRoot) || "~/Documents/CoS-Bridge";
+  const hint = QUICK_SOURCE_HINT[task] || "connect Quick to the relevant data source";
   log(`Amazon Quick isn't set up yet, so I can't get your ${label}.`, "a");
   log("To enable Quick briefings (CFO, daily summary, calendar, etc.):", "muted");
   log("1. Install Amazon Quick (Amazon Quick Suite): https://quick.amazon.com", "muted");
   log(`2. Create a scheduled Quick agent named \u201cvoice-bridge-watcher\u201d that watches ${root}/requests/, and have Quick CREATE the responses/ and outputs/ folders and write results there.`, "muted");
-  log("3. For the CFO, point Quick at your financial-report emails (the finance-summary task).", "muted");
+  log(`3. For this \u201c${label}\u201d, ${hint} (the ${task} task).`, "muted");
   log("Full copy-paste instructions to hand Quick are in docs/quick-setup.md (\u201cGive these instructions to Quick\u201d).", "muted");
   return speak(
     `Amazon Quick isn't set up yet, so I can't pull your ${label}. ` +
-    `You'll need to install Amazon Quick and create the bridge — for the CFO, point it at your financial report emails. ` +
+    `You'll need to install Amazon Quick and create the bridge — for this, ${hint}. ` +
     `I've put the step-by-step setup, including the exact instructions to give Quick, in the log and in the quick-setup guide.`
   );
 }
@@ -645,7 +659,7 @@ async function askQuickBridge(task, label) {
   try {
     const status = await window.coco.bridgeStatus();
     if (status && !status.ready) {
-      return guideBridgeSetup(label, status);
+      return guideBridgeSetup(label, status, task);
     }
   } catch (e) {
     log(`[quick] could not check bridge status: ${e && e.message ? e.message : e}`, "muted");
