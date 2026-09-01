@@ -36,6 +36,20 @@ npm install
 
 electron-builder places artifacts in `dist/`.
 
+### App icon (neon CoS)
+
+The decorated neon "CoS" HUD icon is committed for all platforms:
+`build/icon.icns` (macOS), `build/icon.ico` (Windows), `build/icon.png` (Linux),
+generated from `build/icon.svg`. To tweak it, edit the SVG and regenerate on
+macOS:
+
+```bash
+cd build && ./make-icons.sh
+```
+
+electron-builder picks the right file per platform automatically (configured in
+`package.json`). The window/taskbar icon in dev is set in `electron-main.js`.
+
 ---
 
 ## 1. macOS app (`.app` + `.dmg`)
@@ -92,7 +106,8 @@ Add `build/icon.ico` (256×256 recommended). electron-builder auto-detects it.
 
 ### Add the Windows target to `package.json`
 
-Add a `win` block alongside `mac` under `build`:
+The `win` + `nsis` blocks and `build/icon.ico` (the neon CoS icon) are
+**already configured** in `package.json`:
 
 ```json
 "win": {
@@ -142,11 +157,8 @@ It's harmless to ship, but you can trim it via `build.files` negation
 
 ## 3. Linux app (`AppImage` / `deb`)
 
-### Icon
-
-Add a PNG (e.g. `build/icon.png`, 512×512).
-
-### Add the Linux target to `package.json`
+The `linux` block and `build/icon.png` (the neon CoS icon, 512px) are **already
+configured** in `package.json`:
 
 ```json
 "linux": {

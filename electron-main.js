@@ -69,6 +69,11 @@ function createWindow() {
     height: 940,
     backgroundColor: "#01060b",
     title: "CoS · Chief of Staff",
+    // Neon CoS icon for the taskbar/window (Windows/Linux dev). On macOS the
+    // Dock icon comes from the packaged .icns (build/icon.icns).
+    icon: path.join(__dirname, process.platform === "win32"
+      ? "build/icon.ico"
+      : "build/icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
