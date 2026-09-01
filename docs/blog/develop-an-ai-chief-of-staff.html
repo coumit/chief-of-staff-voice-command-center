@@ -1,0 +1,419 @@
+<!doctype html>
+<!--
+  DRAFT — AWS Public Sector Blog preview
+  Standalone HTML for reviewing the blog format/layout. Styling approximates the
+  AWS Public Sector blog. Replace the ASCII flow with an architecture diagram
+  and the placeholder author with the final bio + headshot before publishing.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Develop an AI Chief of Staff for public sector customers | AWS Public Sector Blog</title>
+  <style>
+    :root {
+      --ink: #16191f;
+      --muted: #5f6b7a;
+      --line: #e4e7eb;
+      --link: #007faa;
+      --link-hover: #005976;
+      --accent: #ec7211;      /* AWS orange */
+      --bg: #ffffff;
+      --panel: #f8f9fa;
+      --code-bg: #0f1b2d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Amazon Ember", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .masthead {
+      background: #232f3e;
+      color: #fff;
+      padding: 14px 0;
+      border-bottom: 3px solid var(--accent);
+    }
+    .masthead .wrap { max-width: 820px; margin: 0 auto; padding: 0 24px; }
+    .masthead .kicker { font-size: 13px; letter-spacing: .04em; color: #ff9900; text-transform: uppercase; }
+    .masthead .brand { font-size: 18px; font-weight: 700; }
+    main { max-width: 820px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1 {
+      font-size: 34px; line-height: 1.2; font-weight: 700; margin: 0 0 12px;
+      letter-spacing: -0.01em;
+    }
+    .byline { color: var(--muted); font-size: 14px; margin: 0 0 4px; }
+    .byline .cat { color: var(--link); }
+    .posted { color: var(--muted); font-size: 13px; margin: 0 0 28px; }
+    h2 {
+      font-size: 24px; font-weight: 700; margin: 36px 0 12px; padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+    h3 { font-size: 18px; font-weight: 700; margin: 24px 0 8px; }
+    p { margin: 0 0 16px; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { color: var(--link-hover); text-decoration: underline; }
+    ul, ol { margin: 0 0 16px; padding-left: 24px; }
+    li { margin: 6px 0; }
+    blockquote {
+      margin: 20px 0; padding: 14px 20px; background: var(--panel);
+      border-left: 4px solid var(--accent); color: #333; border-radius: 0 6px 6px 0;
+    }
+    blockquote p:last-child { margin-bottom: 0; }
+    pre {
+      background: var(--code-bg); color: #d6f3ff; padding: 18px 20px; border-radius: 8px;
+      overflow-x: auto; font-size: 13px; line-height: 1.5;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+    code { font-family: "SFMono-Regular", Menlo, Consolas, monospace; }
+    p code, li code {
+      background: #eef1f4; color: #b8501a; padding: 1px 6px; border-radius: 4px; font-size: 90%;
+    }
+    .note {
+      background: #fff8f0; border: 1px solid #f3d9bd; border-radius: 8px;
+      padding: 14px 18px; margin: 20px 0; font-size: 15px;
+    }
+    .diagram-cap { color: var(--muted); font-size: 13px; margin: 6px 0 24px; text-align: center; }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0; }
+    .author {
+      display: flex; gap: 18px; align-items: flex-start;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+      padding: 20px; margin-top: 8px;
+    }
+    .author .avatar {
+      width: 84px; height: 84px; border-radius: 50%; flex: 0 0 84px;
+      background: #dfe3e8 repeating-linear-gradient(45deg,#e9edf1 0 8px,#dfe3e8 8px 16px);
+      display: grid; place-items: center; color: var(--muted); font-size: 11px; text-align: center;
+      border: 1px solid var(--line);
+    }
+    .author h3 { margin: 0 0 6px; }
+    .author p { margin: 0; font-size: 14px; color: #333; }
+    .placeholder { color: #9aa5b1; font-style: italic; }
+    .editorial {
+      margin-top: 40px; padding: 16px 18px; border: 1px dashed #c7ccd3;
+      border-radius: 8px; background: #fbfbfc; color: var(--muted); font-size: 13px;
+    }
+    .editorial strong { color: #444; }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap">
+      <div class="kicker">AWS Public Sector Blog</div>
+      <div class="brand">Amazon Web Services</div>
+    </div>
+  </header>
+
+  <main>
+    <h1>Develop an AI Chief of Staff for public sector customers</h1>
+    <p class="byline">by Courtney Maatta | in <span class="cat">AWS Public Sector Blog</span>, Artificial Intelligence, Productivity</p>
+    <p class="posted">Posted: [Date] &nbsp;|&nbsp; Permalink &nbsp;|&nbsp; Comments &nbsp;|&nbsp; Share</p>
+
+    <p>Public sector teams spend a large share of their day on administrative
+      work: pulling cost reports, checking on security posture, scanning email
+      and chat for what needs attention, and keeping a calendar straight.
+      Individually these tasks are small. Together they are a tax on the time
+      that mission and constituents actually need.</p>
+
+    <p>What if you had a chief of staff for that work — one that runs entirely on
+      your own machine, listens when you talk to it, and answers back through a
+      clean, high-tech dashboard? With an AI-powered integrated development
+      environment (IDE) and a desktop productivity assistant, you can build
+      exactly that in an afternoon, and it never leaves your laptop.</p>
+
+    <p>In this post, we walk through how to build a local, voice-activated
+      &ldquo;command center&rdquo; — you can give it a fun name like
+      <strong>Jarvis</strong>, <strong>Alexa</strong>, or <strong>Alfred</strong>
+      — that briefs you on finances, security, your calendar, and your inbox. We
+      cover the two prerequisites (a desktop assistant and an AI IDE), how they
+      connect through a simple file &ldquo;bridge,&rdquo; why this pattern is a
+      good fit for public sector constraints, and what to keep in mind on cost.</p>
+
+    <div class="note"><strong>Note:</strong> This is a build-it-yourself, local
+      solution for personal and team productivity. You are using local desktop
+      tools (Quick Desktop and Kiro IDE), and nothing described here deploys to
+      the cloud. You keep the code and the data on your own device.</div>
+
+    <h2>What you will build</h2>
+    <p>The result is a desktop application that runs locally and gives you:</p>
+    <ul>
+      <li><strong>A sci-fi style animated dashboard</strong> — a heads-up display
+        with a live dial, transcript, and status readouts that react as you speak.</li>
+      <li><strong>Voice in and out</strong> — talk to it, and it speaks back a
+        short briefing.</li>
+      <li><strong>C-suite &ldquo;advisors&rdquo;</strong> you can call by name, for example:
+        <ul>
+          <li><strong>Chief Financial Officer (CFO)</strong> — a spending/cost briefing.</li>
+          <li><strong>Chief Security Officer (CSO)</strong> — a security posture review.</li>
+        </ul>
+      </li>
+      <li><strong>A UX Designer</strong> — spins up a new design project using the
+        open source <a href="https://github.com/nexu-io/open-design">Open Design</a>
+        toolset.</li>
+      <li><strong>A Daily Summary</strong> — what happened across your work day,
+        plus quick <strong>Calendar</strong> and <strong>Email</strong> checks.</li>
+      <li><strong>An &ldquo;AI Developer&rdquo;</strong> that drives your local AI
+        IDE to build and refine things for you.</li>
+    </ul>
+    <p>Everything runs on your Mac or desktop OS. There is no server to stand up
+      and no data leaving your machine unless you explicitly wire an integration
+      to do so. For example, say &ldquo;Call my CFO&rdquo; or &ldquo;Chief
+      Financial Officer&rdquo; as the key command to call the agent.</p>
+
+    <figure style="margin:24px 0;">
+      <img src="assets/command-center-ui.png" alt="The Chief of Staff command center: an animated sci-fi dashboard with a central voice dial labeled JARVIS, a transcript on the left, a live clock and system readouts, and a C-suite advisor list on the right." style="width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block;" />
+      <figcaption class="diagram-cap">Figure 1. The local command center dashboard, running on the desktop.</figcaption>
+    </figure>
+
+    <p style="font-size:12px;color:var(--muted);font-style:italic;line-height:1.5;margin:-8px 0 24px;">
+      Names are for fun demonstration purposes only. Any names shown (such as
+      &ldquo;Jarvis,&rdquo; &ldquo;Alexa,&rdquo; or &ldquo;Alfred&rdquo;) are used
+      solely as illustrative, user-chosen display names for a personal, local
+      tool. All product names, logos, and brands are the property of their
+      respective owners, and their use here is nominative and for demonstration
+      purposes only. It does not imply any affiliation with,
+      sponsorship by, or endorsement by those owners. Amazon Web Services and
+      Amazon are not affiliated with, and do not endorse, any third-party marks
+      referenced. Choose your own name for your assistant, and confirm you have
+      the right to use any name or mark you adopt.
+    </p>
+
+    <h2>How it works: the file &ldquo;bridge&rdquo;</h2>
+    <p>You build the bridge by prompting Amazon Quick after setting up Quick
+      agents. The command center itself is intentionally simple and offline. It
+      never calls a third-party API directly. Instead, it exchanges small JSON
+      files with a desktop assistant through a shared folder called the
+      <strong>bridge</strong>. Your desktop assistant does the heavy lifting —
+      connecting to email, chat, and reporting sources — and writes the answers
+      back for the command center to read aloud.</p>
+    <p>The flow looks like this:</p>
+<pre>
+  You (voice)                             Amazon Quick (desktop assistant)
+  ---------------                         --------------------------------
+  "Call the CFO"                          "voice-bridge-watcher" agent
+        |                                  polls the bridge every ~5 min
+        v                                            |
+  Command center writes                              |  reads the request,
+  a request file  ------>  ~/Documents/CoS-Bridge/requests/   runs the task
+                                                     |  (email, cost report,
+                                                     |   security report, ...)
+                                                     v
+                            ~/Documents/CoS-Bridge/responses/response.json
+                            ~/Documents/CoS-Bridge/outputs/&lt;task&gt;.json
+                                                     |
+        +---------------------------------------------+
+        v
+  Command center reads the answer --> speaks the summary + updates the dashboard
+</pre>
+    <p class="diagram-cap">Figure 2. The local command center and Amazon Quick exchange JSON files through a shared bridge folder. (Replace with an architecture diagram before publishing.)</p>
+    <p>The key idea: <strong>the desktop assistant creates and fills the
+      <code>responses/</code> and <code>outputs/</code> folders; the command
+      center only writes requests and reads results.</strong> That clean
+      separation is what keeps the local app simple and private.</p>
+
+    <h2>Prerequisite 1: A desktop assistant to feed the bridge</h2>
+    <p><strong>Amazon Quick Desktop</strong> is a productivity assistant
+      (available for macOS and Windows) that can connect to the tools you already
+      use and act on a schedule. This is the engine behind the bridge.</p>
+    <ul>
+      <li>Learn about and download the desktop app:
+        <a href="https://aws.amazon.com/quick/desktop/">https://aws.amazon.com/quick/desktop/</a></li>
+      <li>Getting started (install and sign in):
+        <a href="https://docs.aws.amazon.com/quick/latest/userguide/getting-started-desktop.html">Amazon Quick on desktop &mdash; Getting started</a></li>
+      <li>Availability (preview) announcement:
+        <a href="https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-quick-macos-windows-preview/">Amazon Quick desktop app for macOS and Windows (preview)</a></li>
+    </ul>
+    <h3>Before you create agents: three quick setup tasks</h3>
+    <p>When you install Amazon Quick for desktop, do these three things first so
+      the assistant has good local data to work with and a place to write:</p>
+    <ol>
+      <li><strong>Enable your integrations</strong> — turn on the
+        <strong>Google Calendar</strong>, <strong>Email</strong>,
+        <strong>Microsoft Teams</strong>, and/or <strong>Slack</strong>
+        connections so Amazon Quick has accurate local data to supply the voice
+        app.</li>
+      <li><strong>Create the bridge folder</strong> — make a local folder named
+        <code>CoS-Bridge</code> in your <code>Documents</code> folder
+        (<code>~/Documents/CoS-Bridge</code>). This is where the assistant and the
+        command center exchange files.</li>
+      <li><strong>Grant Amazon Quick access to the folder</strong> — in Amazon
+        Quick, open the left sidebar, click <strong>My Computer</strong>, and give
+        Amazon Quick access to your <code>CoS-Bridge</code> folder so it can read
+        requests and write results there.</li>
+    </ol>
+
+    <h3>Then give Amazon Quick these agent prompts</h3>
+    <p>With integrations enabled and the folder in place, create scheduled agents
+      in Amazon Quick using plain-language prompts like these. (Adapt the
+      specifics to your own sources.)</p>
+    <ol>
+      <li><strong>Daily Report agent</strong>
+        <blockquote><p>Set up a Daily Report agent that runs at 3 a.m. and sends
+          me an email. It should provide me with key activities from my email over
+          the last week, upcoming events, and calendar key activities for the
+          week.</p></blockquote>
+      </li>
+      <li><strong>CFO Report agent</strong>
+        <blockquote><p>Set up a CFO Report that pulls my AWS cost &amp; billing
+          report data from my email, my Salesforce dashboards, and any reports
+          that are cost- and budget-related.</p></blockquote>
+      </li>
+      <li><strong>CSO Report agent</strong>
+        <blockquote><p>Set up a CSO Report that pulls in
+          <em>&lt;enter your security-related email/source&gt;</em>.</p></blockquote>
+        <p>The <strong>AWS Security Agent</strong> is also a
+          <a href="https://kiro.dev/launch/powers/add/?name=aws-security-agent"><strong>Kiro Power</strong></a>
+          that can scan a repository for you and summarize vulnerabilities — a
+          useful complement to the CSO briefing.</p>
+      </li>
+    </ol>
+
+    <p>To wire these into the voice app, you also create one
+      <strong>bridge-watcher</strong> agent — we named ours
+      <code>voice-bridge-watcher</code> — and give it plain-language instructions:
+      watch the <code>requests/</code> folder, run the matching task, and write
+      the answer back to <code>responses/</code> and <code>outputs/</code>. The
+      full,
+      <a href="https://github.com/coumit/chief-of-staff-voice-command-center/blob/main/docs/quick-setup.md">copy-paste instructions</a>
+      you hand the assistant (including the exact JSON shape it should write) ship
+      with the repository so you do not have to write them from scratch.</p>
+    <blockquote>
+      <p>In our build, the assistant sent exactly the topics the command center
+        asked for — a finance briefing, a daily summary, a calendar check — into
+        the bridge folder, and the command center spoke them back. The
+        accompanying
+        <a href="https://github.com/coumit/chief-of-staff-voice-command-center/blob/main/docs/quick-setup.md">setup document</a>
+        walks through this end to end.</p>
+    </blockquote>
+
+    <p>For reference, these files ship in the repository:</p>
+    <ul>
+      <li><code><a href="https://github.com/coumit/chief-of-staff-voice-command-center/blob/main/docs/quick-setup.md">docs/quick-setup.md</a></code>
+        — step-by-step Amazon Quick setup, including the copy-paste
+        <code>voice-bridge-watcher</code> agent prompt.</li>
+      <li><code><a href="https://github.com/coumit/chief-of-staff-voice-command-center/blob/main/docs/voice-bridge-spec.md">docs/voice-bridge-spec.md</a></code>
+        — the file-bridge protocol and exact request/response JSON schema.</li>
+      <li><code><a href="https://github.com/coumit/chief-of-staff-voice-command-center/tree/main/docs/bridge-template">docs/bridge-template/</a></code>
+        — the default <code>task_registry.json</code> and per-task output files.</li>
+    </ul>
+
+    <h2>Prerequisite 2: An AI IDE to build and shape the app</h2>
+    <p><strong>Kiro</strong> is an AI-powered IDE, and the <strong>Kiro CLI</strong>
+      is its command-line counterpart. Together they let you clone the starter
+      project, run it locally, and then refine it in natural language until it
+      looks and behaves the way you want.</p>
+    <ol>
+      <li><strong>Download Kiro</strong> (IDE):
+        <a href="https://kiro.dev/downloads">https://kiro.dev/downloads</a> &middot;
+        docs: <a href="https://kiro.dev/docs">https://kiro.dev/docs</a></li>
+      <li><strong>Install the Kiro CLI</strong> — the command center's
+        &ldquo;AI Developer&rdquo; feature drives it to build things for you,
+        safely scoped to a project folder.
+        <a href="https://github.com/nexu-io/open-design">Open Design</a> is a
+        third-party, optional solution that works with Kiro IDE to instantly
+        design and prototype products, and is open source. This repo is included
+        for use if you choose to &ldquo;call the UX Designer.&rdquo;</li>
+      <li><strong>Clone the starter
+        <a href="https://github.com/coumit/chief-of-staff-voice-command-center">repository</a></strong>
+        and run it:</li>
+    </ol>
+<pre>
+git clone --recurse-submodules &lt;your-repo-url&gt;
+cd chief-of-staff-voice-command-center
+npm install
+npm start
+</pre>
+    <p>Because the whole thing is a local application — not a cloud deployment —
+      you own it outright. Open it in Kiro and ask for changes in plain English:
+      rename the assistant, restyle the dashboard, add or remove an advisor, or
+      change what a briefing says. The AI IDE is what turns a starter project
+      into <em>your</em> command center. It runs on <strong>macOS and desktop
+      operating systems</strong> (Windows and Linux), with the richest voice
+      experience on macOS.</p>
+
+    <h2>Why a desktop assistant is the right pattern</h2>
+    <p>The reason this approach is powerful for public sector teams is that the
+      desktop assistant can draw on <strong>many local connections you already
+      have</strong> — for example Microsoft Teams, Slack, and email — and turn
+      them into briefings the command center reads aloud. A few examples:</p>
+    <ul>
+      <li><strong>Cost reporting</strong> — the assistant reads your finance/cost
+        report emails and produces a CFO-style spending briefing.</li>
+      <li><strong>Security reporting</strong> — it summarizes security posture and
+        findings into a CSO briefing.</li>
+      <li><strong>Daily operations</strong> — it scans your inbox, chat, and
+        calendar and gives you a single morning summary.</li>
+    </ul>
+    <p>Because that work happens through the assistant and lands in the bridge
+      folder, the command center stays small, local, and easy to reason about —
+      while still benefiting from rich, connected data sources.</p>
+
+    <h2>Cost and token-use disclaimer</h2>
+    <p>This solution is inexpensive to run, but it is not free, and costs depend
+      on how you use it. Keep the following in mind:</p>
+    <ul>
+      <li><strong>AI IDE / model usage</strong> — the &ldquo;AI Developer&rdquo;
+        and advisor features send prompts to a model through Kiro / the Kiro CLI.
+        That consumes <strong>tokens</strong>, which are billed under your Kiro
+        plan or associated AWS account. Long or frequent requests cost more than
+        short, occasional ones. See
+        <a href="https://kiro.dev/pricing/">Kiro pricing</a>.</li>
+      <li><strong>Desktop assistant</strong> — Amazon Quick has its own plans and
+        availability terms (some capabilities are in preview and tied to specific
+        account tiers). Confirm current pricing and eligibility before you rely on
+        it. See
+        <a href="https://aws.amazon.com/quick/pricing/?refid=77f1fbea-4ad5-4c1d-b16e-e5634ca5086e">Amazon Quick pricing</a>.</li>
+      <li><strong>Your machine</strong> — everything else runs locally, so there
+        is no separate cloud compute or storage bill for the command center itself.</li>
+    </ul>
+    <p>Treat any numbers you see in a demo as illustrative. Before rolling this
+      out to a team, review current Kiro and Amazon Quick pricing, and consider
+      setting a habit of short, specific prompts to keep token use predictable.
+      (This repository also includes an optional, local developer tool for
+      tracking token use during development so you can understand cost as you
+      build.)</p>
+
+    <h2>Get started</h2>
+    <p>To build your own AI chief of staff, take the following next steps:</p>
+    <ol>
+      <li>Download Amazon Quick for desktop and complete first sign-in:
+        <a href="https://aws.amazon.com/quick/desktop/">https://aws.amazon.com/quick/desktop/</a></li>
+      <li>Download Kiro and install the Kiro CLI:
+        <a href="https://kiro.dev/downloads">https://kiro.dev/downloads</a></li>
+      <li>Clone the starter repository, run <code>npm start</code>, and open it in
+        Kiro to make it your own.</li>
+      <li>Create the <code>voice-bridge-watcher</code> agent in Amazon Quick using
+        the setup instructions included with the project, and point it at the
+        reporting sources you care about (starting with a cost or finance report
+        for the CFO).</li>
+    </ol>
+    <p><em>Give it a name you will enjoy saying — then ask it for your first
+      briefing.</em></p>
+
+    <hr />
+
+    <h2 style="border:0;padding:0;">About the author</h2>
+    <div class="author">
+      <div class="avatar">[headshot]</div>
+      <div>
+        <h3>Courtney Maatta</h3>
+        <p class="placeholder">[Author bio placeholder — add title, role, and a
+          2&ndash;3 sentence description here. Replace the avatar with the author
+          headshot image.]</p>
+      </div>
+    </div>
+
+    <div class="editorial">
+      <strong>Editorial checklist before submission:</strong>
+      Replace the ASCII flow (Figure 1) with an architecture diagram image &middot;
+      add the author bio + headshot &middot; add a hero image per the AWS blog
+      template &middot; verify Amazon Quick availability/pricing language against
+      current docs &middot; confirm the public repository URL once Code Defender
+      approval lands.
+    </div>
+  </main>
+</body>
+</html>
