@@ -30,11 +30,34 @@ const KIRO_TIMEOUT_MS = Number(process.env.KIRO_TIMEOUT_MS || 120000);
 // --- Open Design config -----------------------------------------------------
 // The `od` CLI starts the local daemon + opens the design web UI. When launched
 // directly it binds to 7456 by default; we probe a small candidate list.
-const OD_BIN = process.env.OD_BIN ||
-  path.join(os.homedir(), "open-design", "node_modules", ".bin", "od");
+//
+// Open Design ships WITH this app as a git submodule at third_party/open-design
+// (built once by scripts/setup-open-design.sh). We resolve the bundled `od`
+// binary from there by default; OD_BIN overrides it. In a packaged app the
+// submodule is unpacked under Resources, so we also probe that location.
+const OD_SUBMODULE_DIRS = [
+  path.join(__dirname, "third_party", "open-design"),
+  path.join(process.resourcesPath || "", "third_party", "open-design"),
+  path.join(process.resourcesPath || "", "app.asar.unpacked", "third_party", "open-design"),
+];
+function resolveBundledOd() {
+  for (const root of OD_SUBMODULE_DIRS) {
+    if (!root) continue;
+    const candidates = [
+      path.join(root, "node_modules", ".bin", "od"),   // created by pnpm install
+      path.join(root, "apps", "daemon", "bin", "od.mjs"), // direct entry (needs build)
+    ];
+    for (const c of candidates) {
+      try { if (fs.existsSync(c)) return c; } catch {}
+    }
+  }
+  // Fall back to the legacy per-user install location.
+  return path.join(os.homedir(), "workspace", "open-design", "node_modules", ".bin", "od");
+}
+const OD_BIN = process.env.OD_BIN || resolveBundledOd();
 const OD_DAEMON_URLS = (process.env.OD_DAEMON_URL
   ? [process.env.OD_DAEMON_URL]
-  : ["http://127.0.0.1:7456", "http://127.0.0.1:50331"]);
+  : ["http://127.0.0.1:7456", "http://127.0.0.1:57776", "http://127.0.0.1:50331"]);
 const OD_NODE_BIN = process.env.OD_NODE_BIN ||
   path.join(os.homedir(), ".local", "bin");
 

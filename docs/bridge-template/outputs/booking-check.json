@@ -1,0 +1,8 @@
+{
+  "task": "booking-check",
+  "status": "completed",
+  "completed_at": "1970-01-01T00:00:00Z",
+  "summary": "No booking update has been run yet. Ask about new bookings and Amazon Quick will check for booking emails and pending reviews.",
+  "data": { "pending_booking_reviews": null, "recent_booking_emails": [] },
+  "original_request": ""
+}

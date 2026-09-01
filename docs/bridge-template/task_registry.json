@@ -1,0 +1,51 @@
+{
+  "_comment": "Default Quick Voice Bridge task registry for Chief of Staff (Jarvis). Copy this whole bridge-template/ folder to your COS_BRIDGE_ROOT (default ~/Documents/CoS-Bridge). Amazon Quick's scheduled 'voice-bridge-watcher' agent reads requests/ and writes responses/ + outputs/. The Chief Growth Officer / growth-summary task is intentionally excluded from this build.",
+  "request_dir": "requests/",
+  "response_file": "responses/response.json",
+  "outputs_dir": "outputs/",
+  "poll_interval_minutes": 5,
+  "tasks": {
+    "daily-summary": {
+      "trigger_phrases": ["daily summary", "what happened today", "morning briefing", "day summary"],
+      "description": "Daily activity + work email briefing for the past 24 hours.",
+      "output_file": "outputs/daily-summary.json",
+      "max_cache_age_minutes": 720
+    },
+    "finance-summary": {
+      "trigger_phrases": ["finance summary", "call the cfo", "cost report", "how much are we spending", "aws costs", "cfo", "what are we spending", "chief financial officer", "finance report", "finance"],
+      "description": "CFO briefing built from the customer's financial report emails (e.g. AWS Cost Report). Spend, trends, service + LLM breakdown.",
+      "output_file": "outputs/finance-summary.json",
+      "max_cache_age_minutes": 720
+    },
+    "mom-update": {
+      "trigger_phrases": ["mom update", "kids update", "what's going on with the kids", "school update", "family update", "kids calendar", "what do the kids have this week"],
+      "description": "Full-week family/school calendar + email walkthrough with action items.",
+      "output_file": "outputs/mom-update.json",
+      "max_cache_age_minutes": 360
+    },
+    "email-check": {
+      "trigger_phrases": ["check my email", "what's in my inbox", "any new emails", "inbox check", "email update", "check email"],
+      "description": "Scans unread inbox emails from the past 24 hours and flags urgent items.",
+      "output_file": "outputs/email-check.json",
+      "max_cache_age_minutes": 60
+    },
+    "calendar-check": {
+      "trigger_phrases": ["what's on my schedule", "any meetings today", "what's today look like", "calendar check", "my schedule", "schedule"],
+      "description": "Today's events across work + family calendars, chronologically.",
+      "output_file": "outputs/calendar-check.json",
+      "max_cache_age_minutes": 240
+    },
+    "booking-check": {
+      "trigger_phrases": ["any new bookings", "check bookings", "booking requests", "booking update", "new clients", "bookings"],
+      "description": "Recent booking-related emails and pending booking review counts.",
+      "output_file": "outputs/booking-check.json",
+      "max_cache_age_minutes": 360
+    },
+    "system-status": {
+      "trigger_phrases": ["how are my agents", "system status", "agent status", "are things running", "system check"],
+      "description": "Health of scheduled agents from the activity feed.",
+      "output_file": "outputs/system-status.json",
+      "max_cache_age_minutes": 240
+    }
+  }
+}

@@ -25,3 +25,9 @@ native/*.log
 *-Bridge/
 bridge/
 product-backlog.json
+
+# Token / context usage cost monitor — TEMPORARY, dev-only. Not part of the
+# shipped solution; kept local so it never commits.
+.kiro/usage/
+.kiro/hooks/token-usage-monitor.json
+scripts/token-usage-monitor.sh

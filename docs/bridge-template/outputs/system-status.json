@@ -1,0 +1,8 @@
+{
+  "task": "system-status",
+  "status": "completed",
+  "completed_at": "1970-01-01T00:00:00Z",
+  "summary": "No system status has been generated yet. Ask how your agents are and Amazon Quick will report on scheduled agent health.",
+  "data": { "agents_active": null, "agents_total": null, "recent_feed_items": null, "any_errors": false },
+  "original_request": ""
+}

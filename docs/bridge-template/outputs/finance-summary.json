@@ -1,0 +1,18 @@
+{
+  "task": "finance-summary",
+  "status": "completed",
+  "completed_at": "1970-01-01T00:00:00Z",
+  "summary": "No finance briefing has been generated yet. Say 'call the CFO' and Amazon Quick will read your latest financial report email and produce one.",
+  "data": {
+    "yesterday_spend": null,
+    "mtd_spend": null,
+    "last_month_same_period": null,
+    "mom_change_pct": null,
+    "wow_change_pct": null,
+    "projected_month_end": null,
+    "llm_7day_total": null,
+    "top_service": null,
+    "top_service_7day": null
+  },
+  "original_request": ""
+}

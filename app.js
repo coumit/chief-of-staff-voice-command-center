@@ -115,7 +115,7 @@ function greetingForTime() {
 
 // --- Agent handoff visual ---------------------------------------------------
 // Spin the top-right reactor + highlight the targeted agent while Coco is
-// "handing off" to a specialist (growth/finance/ux/marketing/quick).
+// "handing off" to a specialist (finance/ux/pm/security/quick).
 let handoffTimer = null;
 function beginHandoff(agentKey, caption) {
   document.body.classList.add("handoff");
@@ -560,8 +560,8 @@ const IN_ELECTRON = typeof window !== "undefined" && window.coco && window.coco.
 const QUICK_TASKS = {
   "daily-summary":   { label: "daily summary",
     phrases: ["daily summary", "what happened today", "morning briefing", "day summary"] },
-  "growth-summary":  { label: "growth briefing",
-    phrases: ["growth summary", "chief growth officer", "cgo", "how's the business", "business update", "dashboard summary", "growth report", "growth"] },
+  // NOTE: "growth-summary" (Chief Growth Officer) is intentionally excluded
+  // from this build — the CGO role is not offered in this command center.
   "finance-summary": { label: "finance briefing",
     phrases: ["finance summary", "call the cfo", "cost report", "how much are we spending", "aws costs", "cfo", "what are we spending", "chief financial officer", "finance report", "finance"] },
   "mom-update":      { label: "family update",
@@ -659,17 +659,13 @@ const AGENT_ALIASES = {
   "researcher": "kirocrew-research",
   "knowledge": "kirocrew-knowledge",
   // C-suite agents
-  "growth": "chief-growth-officer",
-  "growth officer": "chief-growth-officer",
-  "chief growth officer": "chief-growth-officer",
+  // NOTE: Chief Growth Officer ("growth") and Marketing & Sales ("marketing"/
+  // "sales") are intentionally excluded from this build and are NOT mapped.
   "finance": "finance-agent",
   "finance agent": "finance-agent",
   "design": "ux-design-shop",
   "design shop": "ux-design-shop",
   "ux": "ux-design-shop",
-  "marketing": "marketing-sales",
-  "sales": "marketing-sales",
-  "marketing and sales": "marketing-sales",
   "pm": "pm-agent",
   "pm agent": "pm-agent",
   "product manager": "pm-agent",
@@ -683,10 +679,7 @@ const AGENT_ALIASES = {
 // Map a report kind to its Kiro agent + a grounding prompt (used in the desktop
 // app, which has no Flask backend and drives the Kiro CLI directly via IPC).
 const REPORT_AGENTS = {
-  growth: {
-    agent: "chief-growth-officer",
-    prompt: "Give me today's growth briefing: new users, web traffic, and device breakdown, with 2-3 growth recommendations. Ground it in the dashboard summary data.",
-  },
+  // Growth (Chief Growth Officer) intentionally excluded from this build.
   finance: {
     agent: "finance-agent",
     prompt: "Give me today's finance briefing: top AWS cost drivers (infra + LLM spend) with 2-3 recommendations to control spend. Ground it in the cost report data.",
@@ -757,20 +750,19 @@ async function launchDesignShop(brief) {
   }
 }
 
-/** Run a data-grounded report briefing (growth/finance). In the desktop app
- *  this goes through the Kiro CLI (IPC) to the specialist agent; in browser
- *  mode it uses the Flask backend's /report endpoint. */
+/** Run a data-grounded finance report briefing. In the desktop app this goes
+ *  through the Kiro CLI (IPC) to the finance agent; in browser mode it uses the
+ *  Flask backend's /report endpoint. (Growth reporting is excluded from this
+ *  build — the Chief Growth Officer role is not offered.) */
 async function runReport(kind, label) {
   setStatus("WORKING");
-  beginHandoff(kind, kind === "growth" ? "GROWTH" : "FINANCE");
+  beginHandoff(kind, "FINANCE");
 
   // Desktop app: first read the REAL, data-grounded summary written to the
-  // bridge output file. If it matches this report, speak it instantly.
-  // Otherwise request a fresh one through the Quick bridge.
+  // bridge output file. If it's fresh, speak it instantly. Otherwise request a
+  // fresh one through the Quick bridge.
   if (IN_ELECTRON) {
-    // The shared bridge response file only holds the LAST task's result, so it
-    // only counts as a growth/finance summary if its task actually matches.
-    const wantTask = kind === "growth" ? "growth" : "finance";
+    const wantTask = "finance";
     try {
       const out = await window.coco.readOutput(wantTask);
       // Fresh matching output → speak it instantly. Combine the intro + summary
@@ -794,8 +786,7 @@ async function runReport(kind, label) {
 
     // No matching output on file → request it fresh through the Quick bridge
     // (the real data source). This writes a request and waits for Quick.
-    const bridgeTask = kind === "growth" ? "growth-summary" : "finance-summary";
-    return askQuickBridge(bridgeTask, label === "growth" ? "growth briefing" : "finance briefing");
+    return askQuickBridge("finance-summary", "finance briefing");
   }
 
   // Browser mode: use the local Flask backend's report endpoint.
@@ -964,10 +955,12 @@ async function runPmAnalysis(command) {
     }
   } catch {}
   try {
-    const growth = await window.coco.readOutput("growth");
-    if (growth && growth.summary) {
-      ctx += `\nGROWTH / USAGE DATA:\n${growth.summary}\n`;
-      if (growth.metrics) ctx += `GROWTH METRICS: ${JSON.stringify(growth.metrics)}\n`;
+    // Ground the PM in daily usage data (daily-summary), since the dedicated
+    // growth/CGO briefing is excluded from this build.
+    const usage = await window.coco.readOutput("daily-summary");
+    if (usage && usage.summary) {
+      ctx += `\nUSAGE / ACTIVITY DATA:\n${usage.summary}\n`;
+      if (usage.metrics) ctx += `USAGE METRICS: ${JSON.stringify(usage.metrics)}\n`;
     }
   } catch {}
 
@@ -1080,12 +1073,11 @@ function route(rawCmd) {
     return askKiro(rest).then(done);
   }
 
-  // Quick Voice Bridge: match the transcript against all 8 registered tasks
-  // (longest trigger phrase wins). Growth & finance keep their fast local
-  // output-file path; the other six go through the Quick request/response bridge.
+  // Quick Voice Bridge: match the transcript against the registered tasks
+  // (longest trigger phrase wins). Finance keeps its fast local output-file
+  // path; the others go through the Quick request/response bridge.
   const qt = matchQuickTask(cmd);
   if (qt) {
-    if (qt.task === "growth-summary") return runReport("growth", "growth").then(done);
     if (qt.task === "finance-summary") return runReport("finance", "finance").then(done);
     return askQuickBridge(qt.task, qt.label).then(done);
   }
@@ -1098,11 +1090,10 @@ function route(rawCmd) {
       const rest = (m[1] || "").trim();
       currentAgent = AGENT_ALIASES[alias];
       // Map the agent to a right-panel key for the handoff highlight.
+      // (Growth and Marketing & Sales are excluded from this build.)
       const agentName = AGENT_ALIASES[alias];
-      const key = /marketing|sales/.test(agentName) ? "marketing"
-        : /ux-design/.test(agentName) ? "ux"
-        : /finance/.test(agentName) ? "finance"
-        : /growth/.test(agentName) ? "growth" : null;
+      const key = /ux-design/.test(agentName) ? "ux"
+        : /finance/.test(agentName) ? "finance" : null;
       if (key) beginHandoff(key, alias.toUpperCase());
       if (!rest) return speak(`${alias} agent ready. What would you like?`).then(done);
       return askKiro(rest).then(done);

@@ -1,0 +1,4 @@
+[submodule "third_party/open-design"]
+	path = third_party/open-design
+	url = https://github.com/nexu-io/open-design.git
+	branch = main

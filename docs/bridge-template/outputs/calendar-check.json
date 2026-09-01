@@ -1,0 +1,8 @@
+{
+  "task": "calendar-check",
+  "status": "completed",
+  "completed_at": "1970-01-01T00:00:00Z",
+  "summary": "No schedule has been pulled yet. Ask what's on your schedule and Amazon Quick will list today's events.",
+  "data": { "event_count": null, "events": [] },
+  "original_request": ""
+}

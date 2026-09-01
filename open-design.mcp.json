@@ -1,0 +1,17 @@
+{
+  "_comment": "Open Design MCP server for Chief of Staff (Jarvis). Open Design ships with this app as a git submodule at third_party/open-design (build it once with ./scripts/setup-open-design.sh). Copy the 'open-design' entry below into your Kiro MCP config: workspace .kiro/settings/mcp.json or user ~/.kiro/settings/mcp.json. The MCP server is a stdio proxy to the local Open Design daemon; the app starts that daemon on demand via 'call my design shop'. Adjust --daemon-url if you run the daemon on a different port.",
+  "mcpServers": {
+    "open-design": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "third_party/open-design/apps/daemon/bin/od.mjs",
+        "mcp",
+        "--daemon-url",
+        "http://127.0.0.1:7456"
+      ],
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
