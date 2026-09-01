@@ -26,7 +26,11 @@ const BRIDGE_TIMEOUT_MS = Number(process.env.COCO_BRIDGE_TIMEOUT_MS || 360000); 
 // The AI Developer / advisor features drive the Kiro CLI. We auto-detect it on
 // the app's PATH; set KIRO_CLI to an absolute path to override.
 const KIRO_CLI = process.env.KIRO_CLI || path.join(os.homedir(), ".local", "bin", "kiro-cli");
-const KIRO_CWD = process.env.KIRO_CWD || os.homedir();
+// IMPORTANT: the AI Developer runs the agent CLI with this as its working
+// directory. Never default to the home folder — from there the agent would
+// crawl OneDrive/iCloud/Documents/etc. Default to a dedicated, contained
+// project folder that we create on demand. Override with KIRO_CWD.
+const KIRO_CWD = process.env.KIRO_CWD || path.join(os.homedir(), "Documents", "CoS-Projects");
 const KIRO_TIMEOUT_MS = Number(process.env.KIRO_TIMEOUT_MS || 120000);
 
 // PATH a GUI-launched app should search (GUI apps inherit a minimal PATH).
@@ -217,8 +221,12 @@ ipcMain.handle("kiro", async (_evt, message, agent) => {
     if (cli.error) {
       return resolve({ error: cli.error, install: !!cli.install });
     }
-    if (!fs.existsSync(KIRO_CWD)) {
-      return resolve({ error: `Working directory not found: ${KIRO_CWD}. Set KIRO_CWD env var.` });
+    // Ensure the scoped project directory exists (created on demand) so the
+    // agent runs inside a contained workspace rather than the home folder.
+    try {
+      fs.mkdirSync(KIRO_CWD, { recursive: true });
+    } catch (e) {
+      return resolve({ error: `Could not create the AI Developer workspace at ${KIRO_CWD}: ${e.message}` });
     }
 
     const args = buildAgentArgs(message, agent);
