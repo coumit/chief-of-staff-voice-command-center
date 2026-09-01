@@ -20,13 +20,11 @@ CoS-Bridge/
 ├── requests/                   # app writes request_*.json here
 ├── responses/
 │   └── response.json           # Quick overwrites this on every task
-└── outputs/
-    ├── daily-summary.json      # per-task cached result (instant reads)
+└── outputs/                    # Quick CREATES these per-task caches
+    ├── daily-summary.json
     ├── finance-summary.json
-    ├── mom-update.json
     ├── email-check.json
     ├── calendar-check.json
-    ├── booking-check.json
     └── system-status.json
 ```
 
@@ -64,11 +62,12 @@ Response (both `response.json` and `outputs/<task>.json`):
 
 ## Tasks in this build
 
-`daily-summary`, `finance-summary` (CFO), `mom-update`, `email-check`,
-`calendar-check`, `booking-check`, `system-status`.
+`daily-summary`, `finance-summary` (CFO), `email-check`, `calendar-check`,
+`system-status`.
 
-> The **Chief Growth Officer** (`growth-summary`) task and **Marketing & Sales**
-> are intentionally excluded from this build. To add a task, add it here and to
+> The **Chief Growth Officer** (`growth-summary`), **Marketing & Sales**,
+> **Bookings**, and **Family/Kids** updates are intentionally excluded from this
+> build. To add a task, add it here and to
 > `QUICK_TASKS` in `app.js`, then add a matching section to the Quick agent
 > prompt (see `docs/quick-setup.md`).
 

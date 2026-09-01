@@ -479,9 +479,8 @@ ipcMain.handle("read-output", async (_evt, task) => {
 
   // Per-task max cache ages from the Quick Voice Bridge spec (in hours).
   const MAX_CACHE_H = {
-    "daily-summary": 12,   "growth-summary": 12,  "finance-summary": 12,
-    "mom-update": 6,       "email-check": 1,      "calendar-check": 4,
-    "booking-check": 6,    "system-status": 4,
+    "daily-summary": 12,   "finance-summary": 12,
+    "email-check": 1,      "calendar-check": 4,   "system-status": 4,
   };
 
   const readJson = (p) => {

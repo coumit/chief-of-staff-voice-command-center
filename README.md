@@ -46,7 +46,7 @@ Download and install these before setting up the app:
    agents (and the AWS Security Agent Power used by the CSO).
    Download: <https://kiro.dev/downloads> · Docs: <https://kiro.dev/docs>
 2. **Amazon Quick** — required for the file-bridge features (CFO finance
-   reports, Daily Report, calendar, email, bookings, system status). Amazon
+   reports, Daily Report, calendar, email, system status). Amazon
    Quick connects to your email/calendar/integrations and writes answers back to
    the bridge. Download / get started: <https://quick.amazon.com> (Amazon Quick
    Suite). Bridge setup: [`docs/quick-setup.md`](docs/quick-setup.md).

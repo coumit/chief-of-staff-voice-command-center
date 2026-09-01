@@ -553,25 +553,21 @@ const IN_ELECTRON = typeof window !== "undefined" && window.coco && window.coco.
 // =============================================================================
 // QUICK VOICE BRIDGE — task registry (per "Quick Voice Bridge" spec)
 // ---------------------------------------------------------------------------
-// 8 tasks, each with trigger phrases. Coco matches the transcript against these
-// (longest phrase wins, so "growth summary" beats "summary"), then routes the
+// Each task has trigger phrases. Coco matches the transcript against these
+// (longest phrase wins, so "finance summary" beats "summary"), then routes the
 // task through the file-bridge (write request → poll response → speak summary).
 // =============================================================================
 const QUICK_TASKS = {
   "daily-summary":   { label: "daily summary",
     phrases: ["daily summary", "what happened today", "morning briefing", "day summary"] },
-  // NOTE: "growth-summary" (Chief Growth Officer) is intentionally excluded
-  // from this build — the CGO role is not offered in this command center.
+  // NOTE: Chief Growth Officer (growth), Marketing & Sales, Bookings, and the
+  // Family/Kids update are intentionally excluded from this build.
   "finance-summary": { label: "finance briefing",
     phrases: ["finance summary", "call the cfo", "cost report", "how much are we spending", "aws costs", "cfo", "what are we spending", "chief financial officer", "finance report", "finance"] },
-  "mom-update":      { label: "family update",
-    phrases: ["mom update", "kids update", "what's going on with the kids", "school update", "family update", "kids calendar", "what do the kids have this week"] },
   "email-check":     { label: "email check",
     phrases: ["check my email", "what's in my inbox", "any new emails", "inbox check", "email update", "check email"] },
   "calendar-check":  { label: "schedule",
     phrases: ["what's on my schedule", "any meetings today", "what's today look like", "calendar check", "my schedule", "schedule"] },
-  "booking-check":   { label: "bookings update",
-    phrases: ["any new bookings", "check bookings", "booking requests", "booking update", "new clients", "bookings"] },
   "system-status":   { label: "system status",
     phrases: ["how are my agents", "system status", "agent status", "are things running", "system check"] },
 };
@@ -599,8 +595,6 @@ const QUICK_SOURCE_HINT = {
   "daily-summary":   "connect Quick to your daily work email (and calendar)",
   "calendar-check":  "connect Quick to your calendar",
   "email-check":     "connect Quick to your email inbox",
-  "booking-check":   "connect Quick to the mailbox that receives booking emails",
-  "mom-update":      "connect Quick to your family calendar and school emails",
   "system-status":   "let Quick read your agents' activity feed",
 };
 
@@ -733,8 +727,8 @@ const REPORT_AGENTS = {
 /** Launch the Open Design shop: start the local daemon + open its web UI so
  *  you can spin up a new design project. Electron-only (needs filesystem/spawn). */
 /** Pull a design brief out of a spoken command, e.g.
- *  "call my design shop, let's start a new design of a cruise landing page"
- *  → "a cruise landing page". Returns "" if no explicit brief was given. */
+ *  "call my design shop, let's start a new design of a landing page"
+ *  → "a landing page". Returns "" if no explicit brief was given. */
 function extractDesignBrief(cmd) {
   // 1) Remove the shop trigger words so "design shop"/"design studio" don't get
   //    mistaken for the brief lead-in.

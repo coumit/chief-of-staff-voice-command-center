@@ -19,7 +19,7 @@ contextBridge.exposeInMainWorld("coco", {
 
   // Launch the Open Design daemon + web UI, create a project, and optionally
   // kick off a design run from a spoken brief ("call my design shop, start a
-  // new design of a cruise landing page").
+  // new design of a landing page").
   openDesign: (brief) => ipcRenderer.invoke("open-design", brief),
 
   // Native macOS TTS via `say` (reliable inside Electron, no gesture needed).

@@ -86,7 +86,7 @@ piece that makes the bridge work — **Quick owns creating the folders and files
 >     drivers, and any LLM/model spend, in a CFO-style spoken briefing.
 >   • daily-summary: last 24h of work email + today's calendar, as a morning
 >     briefing.
->   • calendar-check, email-check, booking-check, mom-update, system-status:
+>   • calendar-check, email-check, system-status:
 >     see the descriptions in task_registry.json.
 >
 > Always write valid JSON. The "summary" field is read aloud, so keep it
