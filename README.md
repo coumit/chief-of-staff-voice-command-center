@@ -1,4 +1,4 @@
-# Chief of Staff (Jarvis)
+# AI Chief of Staff Command Center
 
 A local, voice-activated desktop **command center** for talking to your AI
 agents. It listens (speech recognition), thinks (your local CLI agents /
