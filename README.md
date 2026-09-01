@@ -12,7 +12,7 @@ premium native voice path; Windows and Linux run the same HUD and features with
 a Web Speech fallback. See [Compatibility](#compatibility) and
 [`docs/packaging-desktop.md`](docs/packaging-desktop.md).
 
-![HUD](assets/screenshot.png)
+![HUD](assets/hud-dial.png)
 
 ## Features
 
