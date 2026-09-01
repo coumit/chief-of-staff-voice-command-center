@@ -807,6 +807,11 @@ async function runReport(kind, label) {
 }
 let currentAgent = "";   // "" = backend default
 
+// When Coco asks a follow-up ("What would you like built?"), we remember which
+// handler should receive the NEXT utterance so it doesn't fall through to the
+// generic command router. Set to a function (text) => Promise, or null.
+let pendingFollowup = null;
+
 /** Parse an optional "ask <agent> ..." / "use <agent> ..." target from a
  *  command, returning { agent, text } with the agent stripped from the text. */
 function extractAgent(cmd) {
@@ -1034,6 +1039,19 @@ function route(rawCmd) {
     .replace(/^\s*(please\s+)?(can you\s+|could you\s+|would you\s+)?(call|get|bring up|open|launch|fetch|pull up|ring)\s+(me\s+)?(my|the|our)\s+/i, "")
     .trim() || rawCmd;
 
+  // --- PENDING FOLLOW-UP ----------------------------------------------------
+  // If Coco just asked a question (e.g. "What would you like built?"), route
+  // this utterance straight to the waiting handler instead of the generic
+  // router. "never mind"/"cancel"/"stop" clears it without dispatching.
+  if (pendingFollowup) {
+    const followup = pendingFollowup;
+    pendingFollowup = null;
+    if (/^\s*(never ?mind|cancel|stop|forget it|nothing)\b/i.test(cmd)) {
+      return speak("No problem.").then(done);
+    }
+    return followup(cmd).then(done);
+  }
+
   // --- HIGH PRIORITY: design shop, Quick bridge tasks, named agents ---------
   // These win over greeting/status chit-chat.
 
@@ -1069,7 +1087,11 @@ function route(rawCmd) {
     const rest = (devM[2] || "").trim();
     currentAgent = "";   // Kiro default agent
     beginDevHandoff();
-    if (!rest) return speak("Your AI developer is ready. What would you like built?").then(done);
+    if (!rest) {
+      // Wait for the user's next utterance and send it to the AI Developer.
+      pendingFollowup = (text) => { beginDevHandoff(); return askKiro(text); };
+      return speak("Your AI developer is ready. What would you like built?").then(done);
+    }
     return askKiro(rest).then(done);
   }
 

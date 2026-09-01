@@ -23,9 +23,58 @@ const RESPONSE_FILE = path.join(BRIDGE_ROOT, "responses", "response.json");
 const BRIDGE_TIMEOUT_MS = Number(process.env.COCO_BRIDGE_TIMEOUT_MS || 360000); // 6 min
 
 // --- Kiro CLI config --------------------------------------------------------
+// The AI Developer / advisor features drive the Kiro CLI. We auto-detect it on
+// the app's PATH; set KIRO_CLI to an absolute path to override.
 const KIRO_CLI = process.env.KIRO_CLI || path.join(os.homedir(), ".local", "bin", "kiro-cli");
 const KIRO_CWD = process.env.KIRO_CWD || os.homedir();
 const KIRO_TIMEOUT_MS = Number(process.env.KIRO_TIMEOUT_MS || 120000);
+
+// PATH a GUI-launched app should search (GUI apps inherit a minimal PATH).
+const AGENT_PATH_DIRS = [
+  path.join(process.env.HOME || "", ".local/bin"),
+  "/opt/homebrew/bin",
+  "/usr/local/bin",
+  "/usr/bin",
+  "/bin",
+  process.env.PATH || "",
+].filter(Boolean);
+const AGENT_ENV = Object.assign({}, process.env, { PATH: AGENT_PATH_DIRS.join(":") });
+
+// Find an executable by name on our augmented PATH. Returns absolute path or "".
+function findOnPath(name) {
+  for (const dir of AGENT_PATH_DIRS) {
+    if (!dir || dir.includes(":")) continue; // skip the raw PATH blob
+    const p = path.join(dir, name);
+    try { if (fs.existsSync(p)) return p; } catch {}
+  }
+  return "";
+}
+
+// Resolve the Kiro CLI. Returns { bin, label } or { error, install } with
+// actionable install guidance when it isn't found.
+function resolveAgentCli() {
+  // Explicit path env var takes priority.
+  if (KIRO_CLI && fs.existsSync(KIRO_CLI)) return { bin: KIRO_CLI, label: "Kiro CLI" };
+  const found = findOnPath("kiro-cli");
+  if (found) return { bin: found, label: "Kiro CLI" };
+
+  return {
+    error:
+      "Kiro CLI not found. The AI Developer needs the Kiro CLI installed.\n\n" +
+      "• Install Kiro CLI: https://kiro.dev/docs\n" +
+      "• Or set KIRO_CLI to its absolute path.\n\n" +
+      "After installing, restart the app.",
+    install: true,
+  };
+}
+
+// Build the argv for a one-shot, non-interactive Kiro CLI prompt:
+//   kiro-cli chat "<prompt>" --no-interactive [--agent NAME]
+function buildAgentArgs(message, agent) {
+  const args = ["chat", message, "--no-interactive"];
+  if (agent) args.push("--agent", agent);
+  return args;
+}
 
 // --- Open Design config -----------------------------------------------------
 // The `od` CLI starts the local daemon + opens the design web UI. When launched
@@ -161,31 +210,21 @@ ipcMain.handle("quick-task", async (_evt, task, params = {}) => {
 // =============================================================================
 ipcMain.handle("kiro", async (_evt, message, agent) => {
   return new Promise((resolve) => {
-    // Fail fast with a clear message if the CLI binary isn't where we expect.
-    if (!fs.existsSync(KIRO_CLI)) {
-      return resolve({ error: `Kiro CLI not found at ${KIRO_CLI}. Set KIRO_CLI env var to its path.` });
+    // Resolve which agent CLI is installed (Kiro CLI or Claude Code CLI). If
+    // neither is present, return actionable install guidance instead of a
+    // cryptic spawn failure.
+    const cli = resolveAgentCli();
+    if (cli.error) {
+      return resolve({ error: cli.error, install: !!cli.install });
     }
     if (!fs.existsSync(KIRO_CWD)) {
       return resolve({ error: `Working directory not found: ${KIRO_CWD}. Set KIRO_CWD env var.` });
     }
 
-    const args = ["chat", message, "--no-interactive"];
-    if (agent) args.push("--agent", agent);
+    const args = buildAgentArgs(message, agent);
+    const cliLabel = cli.label;
 
-    // GUI-launched apps get a minimal PATH; give the CLI a sane one so it can
-    // find any sub-tools it shells out to.
-    const env = Object.assign({}, process.env, {
-      PATH: [
-        path.join(process.env.HOME || "", ".local/bin"),
-        "/opt/homebrew/bin",
-        "/usr/local/bin",
-        "/usr/bin",
-        "/bin",
-        process.env.PATH || "",
-      ].filter(Boolean).join(":"),
-    });
-
-    execFile(KIRO_CLI, args, { cwd: KIRO_CWD, env, timeout: KIRO_TIMEOUT_MS, maxBuffer: 10 * 1024 * 1024 },
+    execFile(cli.bin, args, { cwd: KIRO_CWD, env: AGENT_ENV, timeout: KIRO_TIMEOUT_MS, maxBuffer: 10 * 1024 * 1024 },
       (err, stdout, stderr) => {
         const raw = (stdout || stderr || "").toString();
         // strip ANSI + credits/time footer
@@ -198,10 +237,19 @@ ipcMain.handle("kiro", async (_evt, message, agent) => {
           .trim();
         if (err && !clean) {
           // Surface a detailed reason: spawn error, timeout, or non-zero exit.
+          // ENOENT means the resolved binary vanished/isn't runnable → guide install.
+          if (err.code === "ENOENT") {
+            return resolve({
+              error:
+                `${cliLabel} could not be launched (${cli.bin}). Reinstall it or ` +
+                `set KIRO_CLI to the correct path.`,
+              install: true,
+            });
+          }
           const detail = err.killed ? "timed out"
             : (err.code !== undefined ? `exited with code ${err.code}` : err.message);
           const errText = (stderr || "").toString().replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "").trim();
-          resolve({ error: `Kiro CLI ${detail}${errText ? `: ${errText.slice(0, 300)}` : ""}` });
+          resolve({ error: `${cliLabel} ${detail}${errText ? `: ${errText.slice(0, 300)}` : ""}` });
         } else {
           resolve({ reply: clean || "No output.", agent: agent || "" });
         }
