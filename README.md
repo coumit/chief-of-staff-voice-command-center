@@ -113,6 +113,14 @@ Package a distributable app with electron-builder:
 npm run dist       # macOS: .app + .dmg into dist/
 ```
 
+> **Getting the neon CoS icon:** the branded app icon appears only in a
+> **packaged** build. Run `npm run dist` and open the app from `dist/` (or
+> install the `.dmg`/`.exe`/AppImage) to see the CoS icon in the Dock, Finder,
+> taskbar, and installer. Running in dev with `npm start` shows the generic
+> Electron icon — that's expected for any Electron app. The icon files
+> (`build/icon.icns` / `.ico` / `.png`) ship in the repo and are already wired
+> into `package.json`.
+
 Windows (`.exe`) and Linux (`AppImage`/`deb`) targets, signing/notarization, and
 a CI build matrix are documented in
 [`docs/packaging-desktop.md`](docs/packaging-desktop.md).
