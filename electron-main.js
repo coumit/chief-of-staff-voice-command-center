@@ -415,8 +415,17 @@ function startDesignRun(baseUrl, projectId, conversationId, brief) {
         try {
           const data = JSON.parse(body);
           if (data && data.runId) resolve(data);
-          else reject(new Error((data && data.error && data.error.message) || "run failed to start"));
-        } catch (e) { reject(e); }
+          else {
+            const msg = (data && data.error && data.error.message)
+              || (data && data.error)
+              || `run failed to start (HTTP ${r.statusCode})`;
+            reject(new Error(typeof msg === "string" ? msg : JSON.stringify(msg)));
+          }
+        } catch (e) {
+          // Non-JSON / empty body — include the HTTP status so the failure is
+          // actionable instead of a bare parse error.
+          reject(new Error(`run failed to start (HTTP ${r.statusCode || "?"}): ${String(body).slice(0, 200) || e.message}`));
+        }
       });
     });
     req.on("error", reject);

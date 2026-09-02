@@ -756,11 +756,28 @@ async function launchDesignShop(brief) {
   if (!IN_ELECTRON) {
     return speak("The design shop can only be launched from the Coco desktop app.");
   }
-  speak(brief
-    ? "Opening your design shop and starting a new design now."
-    : "Opening your design shop now.");
+
+  // No brief was spoken (e.g. just "call my design shop"). Opening the shop
+  // with an empty brief creates a blank project and starts NO design run — the
+  // app appears to "open but do nothing". Instead, ask what to design and route
+  // the next utterance back into this same launcher via pendingFollowup, so a
+  // design run is always started with a real brief. "never mind"/"cancel" is
+  // handled by route()'s pendingFollowup guard.
+  const cleanIn = (typeof brief === "string" ? brief.trim() : "");
+  if (!cleanIn) {
+    pendingFollowup = (text) => {
+      const b = extractDesignBrief(text);
+      // If the follow-up didn't parse as a "design X" phrase, treat the whole
+      // utterance as the brief (the user is answering "what would you like
+      // designed?" directly, e.g. "a landing page for a coffee shop").
+      return launchDesignShop(b || (text || "").trim());
+    };
+    return speak("Your design shop is ready. What would you like designed?");
+  }
+
+  speak("Opening your design shop and starting a new design now.");
   try {
-    const res = await window.coco.openDesign(brief);
+    const res = await window.coco.openDesign(cleanIn);
     if (!res || res.error) {
       log(`[design] ${(res && res.error) || "unknown error"}`, "muted");
       return speak("I couldn't open the design shop. The details are in the log.");
@@ -773,10 +790,13 @@ async function launchDesignShop(brief) {
       }
       if (res.runError) {
         log(`[design] run not started: ${res.runError}`, "muted");
-        return speak("I created the project and opened the shop, but couldn't start the design run automatically.");
+        return speak("I created the project and opened the shop, but couldn't start the design run automatically. The reason is in the log.");
       }
+      // A brief is always present here, so a missing run means the daemon
+      // accepted the project but the run didn't start — tell the user rather
+      // than implying success.
       const verb = res.launched ? "started your design shop and created" : "created";
-      return speak(`I've ${verb} a fresh design project for you. It's opening in your browser now.`);
+      return speak(`I've ${verb} a fresh design project and opened it in your browser. If the design doesn't start on its own, tell me the brief again.`);
     }
     if (res.projectError) {
       log(`[design] project not created: ${res.projectError}`, "muted");
@@ -864,8 +884,17 @@ function extractAgent(cmd) {
   return { agent: currentAgent, text: cmd };
 }
 
-async function askKiro(command) {
-  const { agent, text } = extractAgent(command);
+async function askKiro(command, forceAgent) {
+  // When an explicit agent is passed (e.g. the AI Developer → Kiro Crew route),
+  // use it verbatim and treat the whole command as the prompt. Otherwise fall
+  // back to parsing an inline "ask <agent> …" target from the command.
+  let agent, text;
+  if (typeof forceAgent === "string" && forceAgent) {
+    agent = forceAgent;
+    text = command;
+  } else {
+    ({ agent, text } = extractAgent(command));
+  }
   const prompt = text || command;
   setStatus("WORKING");
   speak(pick(["On it.", "Right away.", "Let me see to that.", "One moment."]));
@@ -1119,19 +1148,28 @@ function route(rawCmd) {
     return runCalendar().then(done);
   }
 
-  // AI Developer → the Kiro CLI (this is the ONLY way Kiro is invoked by voice).
+  // AI Developer → Kiro Crew (this is the ONLY way Kiro is invoked by voice).
   // "call my AI developer, <request>" or just "AI developer" to engage it.
+  // Routes to the Kiro Crew agent (kirocrew) rather than the plain default, so
+  // the developer request is handled by the crew orchestrator.
   const devM = cmd.match(/\b(ai developer|a\.?i\.? developer|my developer|kiro)\b[\s,:-]*(.*)$/i);
   if (devM) {
     const rest = (devM[2] || "").trim();
-    currentAgent = "";   // Kiro default agent
+    const CREW_AGENT = AGENT_ALIASES["crew"];   // "kirocrew"
+    currentAgent = CREW_AGENT;   // send this + follow-ups to Kiro Crew
     beginDevHandoff();
     if (!rest) {
-      // Wait for the user's next utterance and send it to the AI Developer.
-      pendingFollowup = (text) => { beginDevHandoff(); return askKiro(text); };
-      return speak("Your AI developer is ready. What would you like built?").then(done);
+      // Wait for the user's next utterance and send it to Kiro Crew. Re-assert
+      // the crew agent inside the follow-up so it can't be clobbered between
+      // turns, and forward the raw prompt straight to the crew.
+      pendingFollowup = (text) => {
+        currentAgent = CREW_AGENT;
+        beginDevHandoff();
+        return askKiro(text, CREW_AGENT);
+      };
+      return speak("Your AI developer is ready. What would you like to build?").then(done);
     }
-    return askKiro(rest).then(done);
+    return askKiro(rest, CREW_AGENT).then(done);
   }
 
   // Quick Voice Bridge: match the transcript against the registered tasks
