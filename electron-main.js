@@ -383,7 +383,9 @@ function createDesignProject(baseUrl) {
       r.on("end", () => {
         try {
           const data = JSON.parse(body);
-          if (data && data.project) resolve({ id: data.project.id, name: data.project.name, url: baseUrl });
+          // POST /api/projects returns { project, conversationId } — capture the
+          // first conversation so we can scope the run and deep-link the session.
+          if (data && data.project) resolve({ id: data.project.id, name: data.project.name, url: baseUrl, conversationId: data.conversationId || null });
           else reject(new Error((data && data.error && data.error.message) || "create failed"));
         } catch (e) { reject(e); }
       });
@@ -396,9 +398,11 @@ function createDesignProject(baseUrl) {
 }
 
 // Kick off a design generation run in a project (daemon spawns its own agent).
-function startDesignRun(baseUrl, projectId, brief) {
+function startDesignRun(baseUrl, projectId, conversationId, brief) {
   return new Promise((resolve, reject) => {
-    const payload = JSON.stringify({ projectId, message: brief, currentPrompt: brief });
+    const body = { projectId, message: brief, currentPrompt: brief };
+    if (conversationId) body.conversationId = conversationId;
+    const payload = JSON.stringify(body);
     const u = new URL(baseUrl + "/api/runs");
     const req = http.request({
       hostname: u.hostname, port: u.port, path: u.pathname, method: "POST",
@@ -462,13 +466,18 @@ ipcMain.handle("open-design", async (_evt, brief) => {
     let run = null, runError = null;
     if (cleanBrief) {
       try {
-        run = await startDesignRun(base, project.id, cleanBrief);
+        run = await startDesignRun(base, project.id, project.conversationId, cleanBrief);
       } catch (e) {
         runError = e.message;
       }
     }
-    try { await shell.openExternal(base); } catch {}
-    return { ok: true, launched, already: !launched, url: base, project, brief: cleanBrief, run, runError };
+    // Deep-link to the project (and its conversation, if we have one) so the
+    // browser lands on the live design session — NOT the daemon home page.
+    const sessionUrl = project.conversationId
+      ? `${base}/projects/${encodeURIComponent(project.id)}/conversations/${encodeURIComponent(project.conversationId)}`
+      : `${base}/projects/${encodeURIComponent(project.id)}`;
+    try { await shell.openExternal(sessionUrl); } catch {}
+    return { ok: true, launched, already: !launched, url: sessionUrl, project, brief: cleanBrief, run, runError };
   } catch (e) {
     // Daemon is up even if project creation failed — still open the UI.
     try { await shell.openExternal(base); } catch {}
