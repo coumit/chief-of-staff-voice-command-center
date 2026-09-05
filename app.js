@@ -897,7 +897,9 @@ async function askKiro(command, forceAgent) {
   }
   const prompt = text || command;
   setStatus("WORKING");
-  speak(pick(["On it.", "Right away.", "Let me see to that.", "One moment."]));
+  speak(agent === AGENT_ALIASES["crew"]
+    ? pick(["Handing that to Kiro Crew now.", "Passing that to Kiro Crew."])
+    : pick(["On it.", "Right away.", "Let me see to that.", "One moment."]));
   try {
     let data;
     if (IN_ELECTRON) {
@@ -919,6 +921,14 @@ async function askKiro(command, forceAgent) {
       return speak("I couldn't reach Kiro. Do check that my backend is running.");
     }
     log(data.reply, "a");
+    // For the AI Developer → Kiro Crew route, don't read the crew's full reply
+    // aloud (it's often a long design/plan discussion that sounds like Jarvis
+    // "talking about the UX designer"). Speak a short acknowledgement and leave
+    // the full reply in the log. Other agents (CFO, CSO, PM) still speak their
+    // reply as before.
+    if (agent === AGENT_ALIASES["crew"]) {
+      return speak("Kiro Crew has taken that on. The full response is in the log.");
+    }
     // Speak a trimmed version (long agent replies get shortened for the voice;
     // the full text stays in the log).
     return speakLong(data.reply);
