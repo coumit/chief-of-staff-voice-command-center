@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld("coco", {
   quickTask: (task, params) => ipcRenderer.invoke("quick-task", task, params),
 
   // Kiro CLI agent call. Returns { reply, agent } or { error }.
-  kiro: (message, agent) => ipcRenderer.invoke("kiro", message, agent),
+  kiro: (message, agent, resume) => ipcRenderer.invoke("kiro", message, agent, resume),
 
   // Read the latest report output (growth/finance) from the bridge folder.
   readOutput: (task) => ipcRenderer.invoke("read-output", task),

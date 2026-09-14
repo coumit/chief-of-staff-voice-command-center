@@ -92,7 +92,7 @@ function resolveAgentCli() {
 // Build the argv for a one-shot, non-interactive Kiro CLI prompt:
 //   kiro-cli chat "<prompt>" --no-interactive --trust-tools=fs_read,fs_write [--agent NAME]
 // Tool access is constrained by KIRO_TRUST_TOOLS (see above).
-function buildAgentArgs(message, agent) {
+function buildAgentArgs(message, agent, resume) {
   const args = ["chat", message, "--no-interactive"];
   const trust = (KIRO_TRUST_TOOLS || "").trim().toLowerCase();
   if (trust === "all") {
@@ -102,6 +102,10 @@ function buildAgentArgs(message, agent) {
     args.push(`--trust-tools=${KIRO_TRUST_TOOLS}`);
   }
   if (agent) args.push("--agent", agent);
+  // Resume the most recent conversation in KIRO_CWD so an AI-Developer
+  // follow-up continues the same thread instead of starting cold. The first
+  // turn omits this (nothing to resume yet); later turns pass resume=true.
+  if (resume) args.push("--resume");
   return args;
 }
 
@@ -286,7 +290,7 @@ ipcMain.handle("quick-task", async (_evt, task, params = {}) => {
 // =============================================================================
 // IPC: KIRO CLI (agents)
 // =============================================================================
-ipcMain.handle("kiro", async (_evt, message, agent) => {
+ipcMain.handle("kiro", async (_evt, message, agent, resume) => {
   return new Promise((resolve) => {
     // Resolve which agent CLI is installed (Kiro CLI or Claude Code CLI). If
     // neither is present, return actionable install guidance instead of a
@@ -303,7 +307,7 @@ ipcMain.handle("kiro", async (_evt, message, agent) => {
       return resolve({ error: `Could not create the AI Developer workspace at ${KIRO_CWD}: ${e.message}` });
     }
 
-    const args = buildAgentArgs(message, agent);
+    const args = buildAgentArgs(message, agent, resume);
     const cliLabel = cli.label;
 
     execFile(cli.bin, args, { cwd: KIRO_CWD, env: AGENT_ENV, timeout: KIRO_TIMEOUT_MS, maxBuffer: 10 * 1024 * 1024 },

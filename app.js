@@ -871,6 +871,33 @@ let currentAgent = "";   // "" = backend default
 // generic command router. Set to a function (text) => Promise, or null.
 let pendingFollowup = null;
 
+// Phrases that END the sticky AI-Developer conversation (in addition to the
+// generic never-mind/cancel guard in route()). When heard, we drop out of dev
+// mode instead of sending the utterance to Kiro Crew.
+const DEV_EXIT_RE = /\b(exit|leave|quit|stop|end|close)\b.*\b(developer|dev|kiro|crew|conversation|session|chat)\b|\b(we'?re|i'?m|that'?s|all)\s+(done|finished|good)\b|\bthank you,? that'?s all\b|\bgoodbye\b/i;
+
+/** Arm a STICKY follow-up that keeps the AI-Developer conversation going: each
+ *  utterance is sent to Kiro Crew (resuming the SAME conversation) and then the
+ *  follow-up re-arms itself, so context persists across turns until the user
+ *  exits. `resume` is true once a conversation has been started so subsequent
+ *  turns continue it rather than starting cold. */
+function armDevFollowup(crewAgent, resume) {
+  pendingFollowup = (text) => {
+    // Let the user step out of the developer conversation.
+    if (DEV_EXIT_RE.test(text)) {
+      currentAgent = "";
+      endHandoff();
+      return speak("Leaving the AI developer. What else can I help with?");
+    }
+    currentAgent = crewAgent;
+    beginDevHandoff();
+    const p = askKiro(text, crewAgent, resume);
+    // Stay in the conversation; every further turn resumes it.
+    armDevFollowup(crewAgent, true);
+    return p;
+  };
+}
+
 /** Parse an optional "ask <agent> ..." / "use <agent> ..." target from a
  *  command, returning { agent, text } with the agent stripped from the text. */
 function extractAgent(cmd) {
@@ -884,7 +911,7 @@ function extractAgent(cmd) {
   return { agent: currentAgent, text: cmd };
 }
 
-async function askKiro(command, forceAgent) {
+async function askKiro(command, forceAgent, resume) {
   // When an explicit agent is passed (e.g. the AI Developer → Kiro Crew route),
   // use it verbatim and treat the whole command as the prompt. Otherwise fall
   // back to parsing an inline "ask <agent> …" target from the command.
@@ -903,12 +930,12 @@ async function askKiro(command, forceAgent) {
   try {
     let data;
     if (IN_ELECTRON) {
-      data = await window.coco.kiro(prompt, agent);
+      data = await window.coco.kiro(prompt, agent, !!resume);
     } else {
       const res = await fetch(`${COCO_BACKEND}/kiro`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: prompt, agent }),
+        body: JSON.stringify({ message: prompt, agent, resume: !!resume }),
       });
       if (!res.ok) {
         log(`Backend error (${res.status}).`, "muted");
@@ -1168,18 +1195,19 @@ function route(rawCmd) {
     const CREW_AGENT = AGENT_ALIASES["crew"];   // "kirocrew"
     currentAgent = CREW_AGENT;   // send this + follow-ups to Kiro Crew
     beginDevHandoff();
+    // Enter a sticky AI-Developer conversation: after the first turn, every
+    // following utterance is sent back to Kiro Crew (resuming the SAME
+    // conversation via --resume) until the user exits ("exit developer",
+    // "we're done", "never mind"), so context is not lost between turns.
     if (!rest) {
-      // Wait for the user's next utterance and send it to Kiro Crew. Re-assert
-      // the crew agent inside the follow-up so it can't be clobbered between
-      // turns, and forward the raw prompt straight to the crew.
-      pendingFollowup = (text) => {
-        currentAgent = CREW_AGENT;
-        beginDevHandoff();
-        return askKiro(text, CREW_AGENT);
-      };
+      armDevFollowup(CREW_AGENT, false);
       return speak("Your AI developer is ready. What would you like to build?").then(done);
     }
-    return askKiro(rest, CREW_AGENT).then(done);
+    // First turn starts a fresh conversation (resume=false); armDevFollowup
+    // then keeps the thread going with resume=true.
+    const first = askKiro(rest, CREW_AGENT, false);
+    armDevFollowup(CREW_AGENT, true);
+    return first.then(done);
   }
 
   // Quick Voice Bridge: match the transcript against the registered tasks
