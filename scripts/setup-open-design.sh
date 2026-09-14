@@ -61,6 +61,26 @@ if ! command -v pnpm >/dev/null 2>&1; then
   exit 1
 fi
 
+# --- 3b. Apply local patches to the submodule ------------------------------
+# Small fixes we carry on top of upstream Open Design (the submodule tracks
+# upstream by commit, so these live as patches in patches/ and are applied here
+# BEFORE the build so they compile into dist/). Idempotent: a patch that is
+# already applied is skipped.
+PATCH_DIR="$REPO_ROOT/patches"
+if [ -d "$PATCH_DIR" ]; then
+  for p in "$PATCH_DIR"/*.patch; do
+    [ -e "$p" ] || continue
+    name="$(basename "$p")"
+    if git -C "$OD_DIR" apply --reverse --check "$p" >/dev/null 2>&1; then
+      echo "==> Patch already applied: $name"
+    elif git -C "$OD_DIR" apply --check "$p" >/dev/null 2>&1; then
+      git -C "$OD_DIR" apply "$p" && echo "==> Applied patch: $name"
+    else
+      echo "WARNING: could not apply $name cleanly (already applied, or upstream changed); skipping." >&2
+    fi
+  done
+fi
+
 # --- 4. Install + build ----------------------------------------------------
 echo "==> Installing Open Design dependencies (this can take a few minutes)..."
 ( cd "$OD_DIR" && pnpm install )

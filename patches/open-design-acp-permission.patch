@@ -1,0 +1,25 @@
+diff --git a/apps/daemon/src/agent-protocol/acp/rpc.ts b/apps/daemon/src/agent-protocol/acp/rpc.ts
+index 85c10d4e0..a0fdb1e68 100644
+--- a/apps/daemon/src/agent-protocol/acp/rpc.ts
++++ b/apps/daemon/src/agent-protocol/acp/rpc.ts
+@@ -246,5 +246,20 @@ export function choosePermissionOutcome(options: unknown): string | null {
+   if (allowAlways?.optionId) return allowAlways.optionId;
+   const allowOnce = list.find((option) => option?.kind === 'allow_once');
+   if (allowOnce?.optionId) return allowOnce.optionId;
++  // Fallback: some agents (e.g. Kiro CLI) label their approve options with
++  // different optionId/kind strings than the canonical ACP set above, which
++  // left the run parked at `awaiting_input` ("tool is blocked in the session").
++  // Select ANY option that clearly means "approve" (optionId or kind contains
++  // allow/approve/accept/yes) while never selecting a reject/deny/cancel option.
++  const isRejection = (s: string) => /\b(reject|deny|denied|decline|cancel|no)\b/i.test(s);
++  const isApproval = (s: string) => /\b(allow|approve|accept|grant|yes|proceed|continue|always|once)\b/i.test(s);
++  const approvable = list.find((option) => {
++    const id = typeof option?.optionId === 'string' ? option.optionId : '';
++    const kind = typeof option?.kind === 'string' ? option.kind : '';
++    if (!id) return false;
++    if (isRejection(id) || isRejection(kind)) return false;
++    return isApproval(id) || isApproval(kind);
++  });
++  if (approvable?.optionId) return approvable.optionId;
+   return null;
+ }
